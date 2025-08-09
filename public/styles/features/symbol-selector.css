@@ -1,0 +1,189 @@
+/* intent: 심볼 선택기 전용 스타일 */
+
+.symbol-selector-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.symbol-selector {
+  position: relative;
+  width: 100%;
+}
+
+/* 선택 버튼 */
+.symbol-selector-btn {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-md);
+  transition: border-color var(--transition-fast);
+}
+
+.symbol-selector-btn:hover {
+  border-color: var(--binance-yellow);
+}
+
+.selected-symbol {
+  font-weight: var(--font-medium);
+}
+
+.selector-arrow {
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  transition: transform var(--transition-fast);
+}
+
+/* 드롭다운 */
+.symbol-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-toast);
+  z-index: 100;
+  max-height: 400px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all var(--transition-fast);
+  margin-top: var(--space-xs);
+}
+
+.symbol-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* 검색 입력 */
+.symbol-search-wrapper {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--border);
+}
+
+.symbol-search {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+}
+
+.symbol-search:focus {
+  outline: none;
+  border-color: var(--binance-yellow);
+}
+
+/* 카테고리 버튼 */
+.symbol-categories {
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--border);
+}
+
+.category-btn {
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-xs);
+  transition: all var(--transition-fast);
+}
+
+.category-btn:hover {
+  border-color: var(--binance-yellow);
+  color: var(--text);
+}
+
+.category-btn.active {
+  background: var(--binance-yellow);
+  border-color: var(--binance-yellow);
+  color: var(--bg);
+  font-weight: var(--font-medium);
+}
+
+/* 심볼 목록 */
+.symbol-list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.symbol-item {
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background-color var(--transition-fast);
+  display: flex;
+  align-items: center;
+}
+
+.symbol-item:last-child {
+  border-bottom: none;
+}
+
+.symbol-item:hover,
+.symbol-item.highlighted {
+  background: rgba(240, 185, 11, 0.05);
+}
+
+.symbol-item.selected {
+  background: rgba(240, 185, 11, 0.1);
+  border-left: 3px solid var(--binance-yellow);
+}
+
+.symbol-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.symbol-name {
+  font-size: var(--font-sm);
+  font-weight: var(--font-medium);
+  color: var(--text);
+}
+
+.symbol-desc {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+}
+
+.no-symbols {
+  padding: var(--space-lg);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+}
+
+/* 스크롤바 스타일 */
+.symbol-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.symbol-list::-webkit-scrollbar-track {
+  background: var(--bg-input);
+}
+
+.symbol-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.symbol-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

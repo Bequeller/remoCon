@@ -1,0 +1,44 @@
+from __future__ import annotations
+
+import time
+import uuid
+from typing import Callable
+
+from fastapi import Request
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
+
+from app.logging_utils import setup_logger
+
+
+logger = setup_logger()
+
+
+async def access_log_middleware(request: Request, call_next: Callable):
+    req_id = str(uuid.uuid4())
+    request.state.request_id = req_id
+    start = time.perf_counter()
+    try:
+        response = await call_next(request)
+    except HTTPException:
+        # let FastAPI handle HTTPException
+        raise
+    except Exception as e:
+        # standard error envelope on unexpected errors
+        elapsed = int((time.perf_counter() - start) * 1000)
+        logger.error(
+            f"reqId={req_id} route={request.url.path} code=UNHANDLED_ERROR cause={e}"
+        )
+        return JSONResponse(
+            status_code=500,
+            content={
+                "requestId": req_id,
+                "code": "UNHANDLED_ERROR",
+                "message": "Internal server error",
+            },
+        )
+    elapsed = int((time.perf_counter() - start) * 1000)
+    logger.info(
+        f"reqId={req_id} route={request.url.path} status={response.status_code} latencyMs={elapsed}"
+    )
+    return response

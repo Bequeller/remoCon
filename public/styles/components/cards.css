@@ -1,0 +1,37 @@
+/* intent: 카드 컴포넌트 전용 스타일 */
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  transition: background-color var(--transition-slow),
+    border-color var(--transition-slow);
+}
+
+/* 패널 헤더 */
+.panel-header {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.panel-header .tab {
+  font-weight: var(--font-bold);
+  color: var(--text);
+  position: relative;
+  padding-bottom: var(--space-xs);
+}
+
+.panel-header .tab::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--space-md));
+  height: 2px;
+  background: var(--binance-yellow);
+}

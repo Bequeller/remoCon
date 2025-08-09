@@ -1,0 +1,26 @@
+/* intent: 버튼 컴포넌트 전용 스타일 */
+
+.btn {
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: var(--font-medium);
+  transition: filter var(--transition-fast);
+}
+
+.btn.buy {
+  background: rgba(14, 203, 129, var(--alpha-medium));
+  color: var(--buy);
+  border-color: rgba(14, 203, 129, var(--alpha-high));
+}
+
+.btn.sell {
+  background: rgba(246, 70, 93, var(--alpha-medium));
+  color: var(--sell);
+  border-color: rgba(246, 70, 93, var(--alpha-high));
+}
+
+.btn:hover {
+  filter: brightness(1.05);
+}

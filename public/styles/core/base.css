@@ -1,0 +1,65 @@
+/* intent: 기본 리셋 및 공통 스타일 */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, system-ui, Segoe UI, Roboto, Noto Sans KR,
+    sans-serif;
+  margin: var(--space-3xl);
+  transition: background-color var(--transition-slow);
+}
+
+/* 거래 애니메이션 - 포지션 카드 */
+#positions-card.trade-buy {
+  background: var(--bg-buy-glow);
+  border-color: var(--buy);
+}
+
+#positions-card.trade-sell {
+  background: var(--bg-sell-glow);
+  border-color: var(--sell);
+}
+
+/* 공통 유틸리티 클래스 */
+.muted {
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+}
+
+.right {
+  margin-left: auto;
+}
+
+/* 헤더 스타일 */
+h1,
+h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  justify-content: center;
+}
+
+/* 앱 로고 */
+.app-logo {
+  width: var(--space-3xl);
+  height: var(--space-3xl);
+  flex-shrink: 0;
+}
+
+/* h2만 점 표시 (h1은 로고가 있으므로 제외) */
+h2::after {
+  content: ' ';
+  display: inline-block;
+  width: var(--space-sm);
+  height: var(--space-sm);
+  background: var(--binance-yellow);
+  border-radius: 50%;
+}

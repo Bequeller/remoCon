@@ -1,0 +1,70 @@
+/* intent: 토스트 알림 시스템 전용 스타일 */
+.toast-container {
+  position: fixed;
+  top: var(--space-md);
+  left: var(--space-xxl);
+  right: var(--space-xxl);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--font-md);
+  font-weight: var(--font-normal);
+  box-shadow: var(--shadow-toast);
+  transform: translateY(-100px);
+  opacity: 0;
+  transition: all var(--transition-fast);
+  width: 100%;
+  word-wrap: break-word;
+  pointer-events: auto;
+  text-align: center;
+}
+
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.toast.success {
+  border-color: var(--buy);
+  background: rgba(14, 203, 129, var(--alpha-low));
+  color: var(--buy);
+}
+
+.toast.error {
+  border-color: var(--sell);
+  background: rgba(246, 70, 93, var(--alpha-low));
+  color: var(--sell);
+}
+
+.toast.info {
+  border-color: var(--binance-yellow);
+  background: rgba(240, 185, 11, var(--alpha-low));
+  color: var(--binance-yellow);
+}
+
+.toast.warning {
+  border-color: var(--binance-yellow);
+  background: rgba(240, 185, 11, var(--alpha-low));
+  color: var(--binance-yellow);
+}
+
+.toast.buy {
+  border-color: var(--buy);
+  background: rgba(14, 203, 129, var(--alpha-low));
+  color: var(--buy);
+}
+
+.toast.sell {
+  border-color: var(--sell);
+  background: rgba(246, 70, 93, var(--alpha-low));
+  color: var(--sell);
+}

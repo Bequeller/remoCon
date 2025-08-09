@@ -1,0 +1,58 @@
+/* intent: 레이아웃 및 그리드 시스템 */
+.container {
+  max-width: var(--size-container);
+  width: 100%;
+  margin: 0 auto;
+  display: grid;
+  gap: var(--space-lg);
+  box-sizing: border-box;
+}
+
+/* 앱 헤더 */
+.app-header {
+  text-align: center;
+  margin-top: var(--space-xxl);
+  margin-bottom: var(--space-xs);
+}
+
+/* 섹션별 레이아웃 */
+.symbol-section,
+.trade-section,
+.positions-section {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.positions-table-wrapper {
+  overflow-x: auto;
+  margin-top: var(--space-md);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.row {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.row.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.input-group {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+/* 섹션 정렬 */
+.section-right {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}

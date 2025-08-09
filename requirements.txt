@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+httpx
+pydantic
+cachetools
+tenacity
+aiofiles
+

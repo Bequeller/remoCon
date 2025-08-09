@@ -1,0 +1,59 @@
+/* intent: 포지션 관련 스타일 */
+
+.positions-table-wrapper {
+  overflow-x: auto;
+  margin-top: var(--space-md);
+}
+
+/* 포지션 테이블 청산 컬럼 */
+.positions-table th:last-child,
+.positions-table td:last-child {
+  text-align: center;
+  width: 80px;
+}
+
+.positions-table td:last-child {
+  padding: var(--space-xs);
+}
+
+/* 청산 버튼 */
+.btn-liquidate {
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-xs);
+  font-weight: var(--font-medium);
+  transition: all var(--transition-fast);
+  min-width: 60px;
+  white-space: nowrap;
+}
+
+.btn-liquidate:hover {
+  background: var(--sell);
+  border-color: var(--sell);
+  color: var(--bg);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(246, 70, 93, 0.3);
+}
+
+.btn-liquidate:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(246, 70, 93, 0.2);
+}
+
+/* 반응형 - 모바일 */
+@media (max-width: 768px) {
+  .btn-liquidate {
+    padding: var(--space-xs);
+    min-width: 50px;
+    font-size: 11px;
+  }
+
+  .positions-table th:last-child,
+  .positions-table td:last-child {
+    width: 60px;
+  }
+}
