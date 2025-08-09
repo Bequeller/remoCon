@@ -30,10 +30,9 @@ ENV PYTHONUNBUFFERED=1
 # 애플리케이션 코드 복사
 COPY app/ ./app/
 COPY public/ ./public/
-COPY log/ ./log/
 
-# 로그 디렉토리 권한 설정
-RUN chmod 755 log/
+# 로그 디렉토리 생성 및 권한 설정
+RUN mkdir -p log/ && chmod 755 log/
 
 # 포트 노출
 EXPOSE 3000

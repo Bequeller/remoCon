@@ -70,7 +70,7 @@ AUTH_TOKEN=your-very-strong-secret-token-here
 
 # 환경 설정
 USE_TESTNET=true
-CORS_ORIGIN=http://localhost:3000
+CORS_ORIGIN=http://localhost
 ALLOWED_SYMBOLS=BTCUSDT,ETHUSDT,ADAUSDT,SOLUSDT,XRPUSDT
 LOG_LEVEL=INFO
 EOF
@@ -124,9 +124,9 @@ PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || curl -s ipinfo.io/ip 2>/dev/null 
 echo ""
 echo "🎉 RemoCon 배포 완료!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🌐 웹 접속: http://${PUBLIC_IP}:3000/app/"
-echo "🔍 헬스체크: http://${PUBLIC_IP}:3000/healthz"
-echo "📊 API 문서: http://${PUBLIC_IP}:3000/docs"
+echo "🌐 웹 접속: http://${PUBLIC_IP}/"
+echo "🔍 헬스체크: http://${PUBLIC_IP}/healthz"
+echo "📊 API 문서: http://${PUBLIC_IP}/docs"
 echo ""
 echo "📋 유용한 명령어:"
 echo "  로그 확인: docker compose logs -f remocon"
@@ -137,6 +137,6 @@ echo ""
 echo "⚠️  보안 알림:"
 echo "  1. .env 파일의 AUTH_TOKEN을 강력한 비밀번호로 변경하세요"
 echo "  2. 테스트넷에서 충분히 테스트 후 메인넷을 사용하세요"
-echo "  3. EC2 보안그룹에서 필요한 포트만 열어두세요"
+echo "  3. EC2 보안그룹에서 80번 포트(HTTP)를 열어두세요"
 echo ""
 echo "🔒 항상 책임감 있게 거래하세요!"
