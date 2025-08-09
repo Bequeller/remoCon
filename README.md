@@ -2,7 +2,7 @@
 
 <div align="center">
   <img src="public/assets/binance-logo.svg" alt="RemoCon Logo" width="64" height="64">
-  <h3>원클릭 선물거래 리모콘</h3>
+  <h3>Binance Futures RemoCon</h3>
   <p>Binance Futures 원클릭 매수/매도 + 포지션 모니터링</p>
 </div>
 
