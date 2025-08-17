@@ -1,7 +1,7 @@
 ---
 description:
 globs:
-alwaysApply: true
+alwaysApply: false
 ---
 
 - 이 문서를 참조했을 시 답변 전, [Business] 단어 출력

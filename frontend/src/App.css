@@ -1,0 +1,63 @@
+/* intent: 앱 레이아웃 스타일 */
+
+.App {
+  min-height: 100vh;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+.App-header {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-sm);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.binance-logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.header-text {
+  text-align: center;
+}
+
+.App-header h1 {
+  font-size: var(--font-xl);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-sm);
+  color: var(--binance-yellow);
+}
+
+.App-header p {
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+}
+
+.App-main {
+  padding: var(--space-sm);
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm);
+  box-shadow: var(--shadow-toast);
+}
+
+.symbol-section {
+  margin-bottom: var(--space-xl);
+}

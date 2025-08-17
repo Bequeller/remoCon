@@ -1,0 +1,205 @@
+/* intent: 포지션 테이블 React 컴포넌트 스타일 */
+
+.positions-section {
+  margin-bottom: var(--space-xl);
+}
+
+.positions-table-wrapper {
+  overflow-x: auto;
+}
+
+/* 포지션 테이블 */
+.positions-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+/* 테이블 헤더 */
+.positions-table thead {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--border);
+}
+
+.positions-table th {
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--font-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* 테이블 바디 */
+.positions-table tbody {
+  min-height: 120px;
+}
+
+/* 포지션 행 */
+.position-row {
+  border-bottom: 1px solid var(--border);
+  transition: background-color var(--transition-fast);
+}
+
+.position-row:last-child {
+  border-bottom: none;
+}
+
+.position-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.position-row td {
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--font-sm);
+  white-space: nowrap;
+}
+
+/* 포지션 심볼 */
+.position-symbol {
+  font-weight: var(--font-medium);
+  color: var(--text);
+}
+
+.position-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-indicator.long {
+  background: var(--buy);
+}
+
+.status-indicator.short {
+  background: var(--sell);
+}
+
+/* 포지션 자산 */
+.position-asset {
+  color: var(--text);
+  font-weight: var(--font-medium);
+}
+
+/* 포지션 레버리지 */
+.position-leverage {
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+}
+
+/* 포지션 손익 */
+.position-pnl {
+  font-weight: var(--font-medium);
+}
+
+.position-pnl.positive {
+  color: var(--buy);
+}
+
+.position-pnl.negative {
+  color: var(--sell);
+}
+
+/* 포지션 닫기 버튼 */
+.position-close {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-xs);
+  font-weight: var(--font-medium);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.position-close:hover {
+  border-color: var(--sell);
+  color: var(--sell);
+  background: rgba(246, 70, 93, 0.1);
+}
+
+/* 빈 상태 */
+.positions-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl) var(--space-lg);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.positions-empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-md);
+  opacity: 0.5;
+}
+
+.positions-empty-text {
+  font-size: var(--font-md);
+  font-weight: var(--font-medium);
+  margin-bottom: var(--space-xs);
+}
+
+.positions-empty-subtext {
+  font-size: var(--font-sm);
+  opacity: 0.7;
+}
+
+/* 로딩 상태 */
+.positions-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl) var(--space-lg);
+  color: var(--text-muted);
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border);
+  border-top: 2px solid var(--binance-yellow);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--space-md);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .positions-table th,
+  .positions-table td {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-xs);
+  }
+
+  .position-leverage {
+    display: none;
+  }
+
+  .positions-table th:nth-child(3),
+  .positions-table td:nth-child(3) {
+    display: none;
+  }
+}
