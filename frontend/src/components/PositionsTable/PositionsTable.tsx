@@ -1,13 +1,13 @@
-// intent: 포지션 테이블 React 컴포넌트
+// intent: 포지션 테이블 React 컴포넌트 - 백엔드 API 연동
 import React, { useState, useEffect } from 'react';
+import { positionsAPI } from '../../utils/api';
 import './PositionsTable.css';
 
 interface Position {
   symbol: string;
   positionAmt: string;
   entryPrice: string;
-  leverage: string;
-  assetPercent: string;
+  leverage: number;
   unRealizedProfit: string;
   marginType: string;
 }
@@ -21,54 +21,41 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
 }) => {
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 임시 포지션 데이터 로드
+  // 실제 포지션 데이터 로드
   useEffect(() => {
-    const loadPositions = () => {
-      // 임시 데이터 (실제 API 연결 전)
-      const tempPositions: Position[] = [
-        {
-          symbol: 'BTCUSDT',
-          positionAmt: '0.001',
-          entryPrice: '43250.50',
-          leverage: '10x',
-          assetPercent: '25.0',
-          unRealizedProfit: '125.30',
-          marginType: 'cross',
-        },
-        {
-          symbol: 'ETHUSDT',
-          positionAmt: '0.05',
-          entryPrice: '2650.75',
-          leverage: '5x',
-          assetPercent: '15.0',
-          unRealizedProfit: '-45.20',
-          marginType: 'cross',
-        },
-        {
-          symbol: 'SOLUSDT',
-          positionAmt: '2.5',
-          entryPrice: '98.25',
-          leverage: '20x',
-          assetPercent: '10.0',
-          unRealizedProfit: '67.80',
-          marginType: 'cross',
-        },
-      ];
+    const loadPositions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      setPositions(tempPositions);
-      setLoading(false);
+        // 백엔드 API에서 포지션 데이터 가져오기
+        const positionsData = await positionsAPI.fetchPositions();
+        setPositions(positionsData);
+      } catch (err) {
+        console.error('Failed to load positions:', err);
+        setError('Failed to load positions. Please try again.');
+        setPositions([]); // 에러 시 빈 배열로 설정
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // 실제 구현에서는 API 호출
-    setTimeout(loadPositions, 500);
+    // 초기 로드
+    loadPositions();
+
+    // 60초마다 자동 새로고침 (캐시 TTL과 맞춤)
+    const interval = setInterval(loadPositions, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleClosePosition = (symbol: string) => {
     if (onPositionClose) {
       onPositionClose(symbol);
     } else {
-      // 기본 동작: 포지션 제거
+      // 기본 동작: 포지션 제거 (UI에서만)
       setPositions((prev) => prev.filter((pos) => pos.symbol !== symbol));
     }
   };
@@ -86,6 +73,29 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
     const value = parseFloat(profit);
     return value >= 0 ? 'positive' : 'negative';
   };
+
+  // 에러 상태 표시
+  if (error) {
+    return (
+      <div className="positions-section">
+        <div className="card">
+          <div className="panel-header">
+            <span className="tab">Positions</span>
+          </div>
+          <div className="positions-error">
+            <div className="error-icon">⚠️</div>
+            <div className="error-text">{error}</div>
+            <button
+              className="retry-button"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -128,7 +138,8 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
               <thead>
                 <tr>
                   <th scope="col">Symbol</th>
-                  <th scope="col">Asset(%)</th>
+                  <th scope="col">Size</th>
+                  <th scope="col">Entry Price</th>
                   <th scope="col">Leverage</th>
                   <th scope="col">PnL</th>
                   <th scope="col">Close</th>
@@ -147,12 +158,17 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                           {position.symbol}
                         </div>
                       </td>
-                      <td className="position-asset">
-                        {formatNumber(position.assetPercent)}%
+                      <td className="position-size">
+                        {formatNumber(position.positionAmt, 4)}
                       </td>
-                      <td className="position-leverage">{position.leverage}</td>
+                      <td className="position-entry">
+                        ${formatNumber(position.entryPrice)}
+                      </td>
+                      <td className="position-leverage">
+                        {position.leverage}x
+                      </td>
                       <td className={`position-pnl ${profitColor}`}>
-                        {parseFloat(position.unRealizedProfit) >= 0 ? '+' : ''}
+                        {parseFloat(position.unRealizedProfit) >= 0 ? '+' : ''}$
                         {formatNumber(position.unRealizedProfit)}
                       </td>
                       <td>

@@ -1,8 +1,8 @@
 // API 설정 (확장성 있는 구조)
 export const API_CONFIG = {
-  baseURL: import.meta.env.VITE_API_BASE_URL || '',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
   endpoints: {
-    symbols: '/symbols',
+    symbols: '/api/symbols',
     health: '/healthz',
     positions: '/api/positions',
     trade: '/api/trade',

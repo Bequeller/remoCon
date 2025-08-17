@@ -11,7 +11,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -43,30 +43,31 @@
 .header-right {
   display: flex;
   align-items: center;
+  gap: var(--space-sm);
 }
 
 .health-status {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
   padding: var(--space-xs) var(--space-sm);
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  min-width: 80px;
+  min-width: 70px;
   justify-content: center;
 }
 
 .health-indicator {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
   box-shadow: 0 0 4px currentColor;
 }
 
 .health-text {
-  font-size: var(--font-sm);
+  font-size: var(--font-xs);
   font-weight: var(--font-medium);
   color: var(--text);
   text-transform: uppercase;

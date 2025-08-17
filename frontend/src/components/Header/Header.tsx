@@ -8,33 +8,58 @@ interface HealthStatus {
     useTestnet: boolean;
     hasKeys: boolean;
   };
+  version: string;
+}
+
+interface BinanceHealthStatus {
+  status: string;
   binance: {
     reachable: boolean;
     tsOffsetMs: number;
+    testnet: boolean;
   };
-  version: string;
+}
+
+interface ApiKeyStatus {
+  status: string;
+  message: string;
+  testnet: boolean;
 }
 
 export const Header = () => {
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [binanceHealthStatus, setBinanceHealthStatus] =
+    useState<BinanceHealthStatus | null>(null);
+  const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyStatus | null>(null);
 
   const fetchHealthStatus = async () => {
     try {
-      // 컨테이너 환경에서는 백엔드 서비스에 직접 호출
-      const response = await fetch('http://localhost:3000/healthz');
-      if (response.ok) {
-        const data = await response.json();
-        setHealthStatus(data);
-        setError(null);
-      } else {
-        setError('Health check failed');
+      // 백엔드 서버 헬스체크
+      const healthResponse = await fetch('http://localhost:3000/health');
+      if (healthResponse.ok) {
+        const healthData = await healthResponse.json();
+        setHealthStatus(healthData);
+      }
+
+      // Binance 연결성 체크
+      const binanceResponse = await fetch(
+        'http://localhost:3000/health/binance'
+      );
+      if (binanceResponse.ok) {
+        const binanceData = await binanceResponse.json();
+        setBinanceHealthStatus(binanceData);
+      }
+
+      // API Key 유효성 체크
+      const apiKeyResponse = await fetch(
+        'http://localhost:3000/health/binance/api-key'
+      );
+      if (apiKeyResponse.ok) {
+        const apiKeyData = await apiKeyResponse.json();
+        setApiKeyStatus(apiKeyData);
       }
     } catch {
-      setError('Network error');
-    } finally {
-      setIsLoading(false);
+      // 에러 처리 - 상태는 그대로 유지
     }
   };
 
@@ -45,22 +70,10 @@ export const Header = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const getHealthStatusColor = () => {
-    if (isLoading) return 'var(--text-muted)';
-    if (error || !healthStatus) return 'var(--sell)';
-    if (healthStatus.status === 'ok' && healthStatus.binance.reachable) {
-      return 'var(--buy)';
-    }
-    return 'var(--sell)';
-  };
-
-  const getHealthStatusText = () => {
-    if (isLoading) return 'Checking...';
-    if (error || !healthStatus) return 'Offline';
-    if (healthStatus.status === 'ok' && healthStatus.binance.reachable) {
-      return 'Online';
-    }
-    return 'Error';
+  const getStatusColor = (status: string) => {
+    if (status === 'ok' || status === 'valid') return 'var(--buy)';
+    if (status === 'error' || status === 'invalid') return 'var(--sell)';
+    return 'var(--text-muted)';
   };
 
   return (
@@ -78,9 +91,37 @@ export const Header = () => {
           <div className="health-status">
             <div
               className="health-indicator"
-              style={{ backgroundColor: getHealthStatusColor() }}
+              style={{
+                backgroundColor: getStatusColor(
+                  healthStatus?.status || 'unknown'
+                ),
+              }}
             />
-            <span className="health-text">{getHealthStatusText()}</span>
+            <span className="health-text">Backend</span>
+          </div>
+
+          <div className="health-status">
+            <div
+              className="health-indicator"
+              style={{
+                backgroundColor: getStatusColor(
+                  binanceHealthStatus?.status || 'unknown'
+                ),
+              }}
+            />
+            <span className="health-text">Binance</span>
+          </div>
+
+          <div className="health-status">
+            <div
+              className="health-indicator"
+              style={{
+                backgroundColor: getStatusColor(
+                  apiKeyStatus?.status || 'unknown'
+                ),
+              }}
+            />
+            <span className="health-text">API Key</span>
           </div>
         </div>
       </div>

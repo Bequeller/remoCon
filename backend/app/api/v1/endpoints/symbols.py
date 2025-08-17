@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from app.api.deps import get_binance_client
+from app.clients.binance_client import BinanceFuturesClient
 from app.models.schemas import Symbol, SymbolsResponse
 from app.services.cache_service import SymbolMetaCache
 
@@ -14,8 +14,11 @@ symbol_cache = SymbolMetaCache()
 @router.get(
     "/symbols", response_model=SymbolsResponse, summary="Get available trading symbols"
 )
-async def get_symbols(client=Depends(get_binance_client)):
+async def get_symbols():
     """거래 가능한 심볼 목록을 반환합니다. TRADING 상태이고 USDT 페어인 모든 심볼을 필터링합니다."""
+    # 직접 BinanceFuturesClient 생성
+    client = BinanceFuturesClient()
+
     try:
         exchange_info = await symbol_cache.get_exchange_info(client)
 
@@ -43,3 +46,5 @@ async def get_symbols(client=Depends(get_binance_client)):
             status_code=500,
             content={"ok": False, "error": f"Failed to fetch symbols: {str(e)}"},
         )
+    finally:
+        await client.close()

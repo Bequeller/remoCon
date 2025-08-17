@@ -1,11 +1,15 @@
 import hashlib
 import hmac
+import logging
 import os
 import time
 from typing import Any, Optional
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential_jitter
+
+# 로거 설정
+logger = logging.getLogger(__name__)
 
 
 class BinanceFuturesClient:
@@ -22,7 +26,7 @@ class BinanceFuturesClient:
         timeout_seconds: float = 5.0,
     ) -> None:
         self.api_key = api_key or os.getenv("BINANCE_API_KEY") or ""
-        self.api_secret = api_secret or os.getenv("BINANCE_API_SECRET") or ""
+        self.api_secret = api_secret or os.getenv("BINANCE_SECRET_KEY") or ""
         self.use_testnet = use_testnet if use_testnet is not None else True
         self.base_url = (
             "https://testnet.binancefuture.com"
@@ -33,6 +37,16 @@ class BinanceFuturesClient:
             base_url=self.base_url, timeout=timeout_seconds
         )
         self._ts_offset_ms: int = 0
+
+        # 초기화 로깅
+        logger.info(
+            f"BinanceFuturesClient initialized: testnet={self.use_testnet}, base_url={self.base_url}"
+        )
+        logger.info(
+            f"API Key present: {bool(self.api_key)}, API Secret present: {bool(self.api_secret)}"
+        )
+        if not self.api_key or not self.api_secret:
+            logger.warning("API key or secret is missing - private endpoints will fail")
 
     async def close(self) -> None:
         await self._client.aclose()
@@ -92,35 +106,69 @@ class BinanceFuturesClient:
         )
 
     async def get_position_risk(self, symbol: Optional[str] = None) -> Any:
+        logger.info(f"Getting position risk for symbol: {symbol or 'all'}")
         params: dict[str, Any] = {}
         if symbol:
             params["symbol"] = symbol
-        return await self._signed_request("GET", "/fapi/v2/positionRisk", params=params)
+        try:
+            result = await self._signed_request(
+                "GET", "/fapi/v2/positionRisk", params=params
+            )
+            logger.info(
+                f"Successfully retrieved position risk data: {len(result) if isinstance(result, list) else 'single item'}"
+            )
+            return result
+        except Exception as e:
+            logger.error(f"Failed to get position risk: {str(e)}")
+            raise
 
     async def _signed_request(
         self, method: str, path: str, params: Optional[dict[str, Any]] = None
     ) -> dict[str, Any]:
+        logger.info(f"Making signed request: {method} {path}")
+
         if not self.api_key or not self.api_secret:
+            logger.error("API key/secret required for private endpoints")
+            logger.error(
+                f"API Key present: {bool(self.api_key)}, API Secret present: {bool(self.api_secret)}"
+            )
             raise RuntimeError("API key/secret required for private endpoints")
 
         if self._ts_offset_ms == 0:
+            logger.info("Syncing time with Binance server")
             await self.sync_time()
 
         params = params.copy() if params else {}
         params["timestamp"] = self._now_ms()
-        query = httpx.QueryParams(params).to_str()
+        query = str(httpx.QueryParams(params))
         signature = hmac.new(
             self.api_secret.encode(), query.encode(), hashlib.sha256
         ).hexdigest()
         headers = {"X-MBX-APIKEY": self.api_key}
         req_kwargs = {"headers": headers}
-        if method.upper() == "GET":
-            resp = await self._client.get(
-                path, params={**params, "signature": signature}, **req_kwargs
-            )
-        else:
-            resp = await self._client.post(
-                path, params={**params, "signature": signature}, **req_kwargs
-            )
-        resp.raise_for_status()
-        return resp.json()
+
+        logger.info(f"Request details: method={method}, path={path}, params={params}")
+        logger.info(f"Signature generated: {signature[:10]}...")
+
+        try:
+            if method.upper() == "GET":
+                resp = await self._client.get(
+                    path, params={**params, "signature": signature}, **req_kwargs
+                )
+            else:
+                resp = await self._client.post(
+                    path, params={**params, "signature": signature}, **req_kwargs
+                )
+
+            logger.info(f"Response status: {resp.status_code}")
+            resp.raise_for_status()
+            result = resp.json()
+            logger.info(f"Response data type: {type(result)}")
+            return result
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error: {e.response.status_code} - {e.response.text}")
+            raise
+        except Exception as e:
+            logger.error(f"Request failed: {str(e)}")
+            raise

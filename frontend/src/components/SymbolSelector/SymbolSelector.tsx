@@ -1,5 +1,6 @@
 // intent: 심볼 선택기 React 컴포넌트 (검색창 형태)
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { symbolsAPI } from '../../utils/api';
 import './SymbolSelector.css';
 
 interface Symbol {
@@ -12,40 +13,6 @@ interface SymbolSelectorProps {
   onSymbolChange?: (symbol: string) => void;
   initialSymbol?: string;
 }
-
-// API 설정 (확장성 있는 구조)
-const API_CONFIG = {
-  baseURL: import.meta.env.VITE_API_BASE_URL || '',
-  endpoints: {
-    symbols: '/symbols',
-    health: '/healthz',
-    positions: '/api/positions',
-    trade: '/api/trade',
-  },
-};
-
-// API 호출 함수 (확장성 있는 구조)
-const apiCall = async (endpoint: string): Promise<unknown> => {
-  try {
-    const url = `${API_CONFIG.baseURL}${endpoint}`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error(`Failed to fetch ${endpoint}:`, error);
-    throw error;
-  }
-};
-
-// 심볼 목록 조회 함수
-const fetchSymbols = async (): Promise<Symbol[]> => {
-  const data = (await apiCall(API_CONFIG.endpoints.symbols)) as {
-    symbols?: Symbol[];
-  };
-  return data.symbols || [];
-};
 
 export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   onSymbolChange,
@@ -74,7 +41,7 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
       try {
         setLoading(true);
         setError(null);
-        const fetchedSymbols = await fetchSymbols();
+        const fetchedSymbols = await symbolsAPI.fetchSymbols();
         setSymbols(fetchedSymbols);
         setFilteredSymbols(fetchedSymbols);
       } catch (err) {

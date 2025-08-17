@@ -1,22 +1,22 @@
-import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.api import api_router
-from app.core.config import CORS_ORIGIN
-from app.core.static import mount_static_files
+from app.clients.binance_client import BinanceFuturesClient
+from app.core.config import CORS_ORIGIN, get_binance_config
 from app.utils.middleware import access_log_middleware
-from external.binance import BinanceFuturesClient
 
 
 # intent: minimal FastAPI app with health check and static SPA mount
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # intent: create a single AsyncClient-bound Binance client for app lifetime
-    use_testnet = os.getenv("USE_TESTNET", "true").lower() == "true"
-    app.state.binance_client = BinanceFuturesClient(use_testnet=use_testnet)
+    binance_config = get_binance_config()
+    app.state.binance_client = BinanceFuturesClient(
+        use_testnet=binance_config["use_testnet"]
+    )
     try:
         yield
     finally:
@@ -40,6 +40,3 @@ app.add_middleware(
 
 # API 라우터 등록
 app.include_router(api_router)
-
-# 정적 파일 마운트
-mount_static_files(app)
