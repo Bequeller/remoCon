@@ -1,4 +1,4 @@
-// intent: Market Order React 컴포넌트 - 1단계: 기본 구조와 Size 입력
+// intent: Market Order React 컴포넌트 - Size를 USDT 단위로 변경
 import React, { useState } from 'react';
 import './MarketOrder.css';
 
@@ -7,11 +7,11 @@ interface MarketOrderProps {
 }
 
 export const MarketOrder: React.FC<MarketOrderProps> = ({ onTrade }) => {
-  const [size, setSize] = useState(25);
+  const [size, setSize] = useState(100); // 기본값을 100 USDT로 변경
   const [leverage, setLeverage] = useState(20);
 
   const handleSizeChange = (value: number) => {
-    setSize(Math.max(1, Math.min(100, value)));
+    setSize(Math.max(10, Math.min(10000, value))); // 범위를 10-10000 USDT로 변경
   };
 
   const handleSizePreset = (presetSize: number) => {
@@ -23,7 +23,7 @@ export const MarketOrder: React.FC<MarketOrderProps> = ({ onTrade }) => {
     console.log(`${side.toUpperCase()} order:`, { size, leverage });
   };
 
-  const sizePresets = [10, 25, 50, 75, 100];
+  const sizePresets = [50, 100, 500, 1000, 5000]; // USDT 기준 프리셋
 
   return (
     <div className="trade-section">
@@ -34,7 +34,7 @@ export const MarketOrder: React.FC<MarketOrderProps> = ({ onTrade }) => {
 
         {/* 거래 파라미터 그리드 */}
         <div className="trade-params-grid">
-          {/* Size 입력 - 1단계 구현 */}
+          {/* Size 입력 - USDT 단위로 변경 */}
           <div className="param-group">
             <div className="param-header">
               <span className="param-label">Size</span>
@@ -43,28 +43,28 @@ export const MarketOrder: React.FC<MarketOrderProps> = ({ onTrade }) => {
               <div className="param-input-group">
                 <input
                   type="number"
-                  min="1"
-                  max="100"
-                  step="1"
+                  min="10"
+                  max="10000"
+                  step="10"
                   value={size}
                   onChange={(e) => handleSizeChange(Number(e.target.value))}
                   className="param-input"
-                  aria-label="Trade size percentage"
+                  aria-label="Trade size in USDT"
                 />
-                <span className="param-unit">%</span>
+                <span className="param-unit">USDT</span>
               </div>
               <div className="slider-track">
                 <div
                   className="slider-progress"
-                  style={{ width: `${size}%` }}
+                  style={{ width: `${(size / 10000) * 100}%` }}
                 ></div>
               </div>
               <div className="slider-marks">
-                <span>1%</span>
-                <span>25%</span>
-                <span>50%</span>
-                <span>75%</span>
-                <span>100%</span>
+                <span>10</span>
+                <span>2.5K</span>
+                <span>5K</span>
+                <span>7.5K</span>
+                <span>10K</span>
               </div>
             </div>
             <div className="param-presets">
@@ -75,7 +75,7 @@ export const MarketOrder: React.FC<MarketOrderProps> = ({ onTrade }) => {
                   className={`preset-btn ${size === preset ? 'active' : ''}`}
                   onClick={() => handleSizePreset(preset)}
                 >
-                  {preset === 100 ? 'Max' : `${preset}%`}
+                  {preset >= 1000 ? `${preset / 1000}K` : preset}
                 </button>
               ))}
             </div>
