@@ -22,3 +22,9 @@ def error_response(
             "message": message,
         },
     )
+
+
+class AppError(Exception):
+    """Custom application error."""
+
+    pass

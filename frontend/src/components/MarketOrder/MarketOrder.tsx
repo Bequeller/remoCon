@@ -3,10 +3,19 @@ import React, { useState } from 'react';
 import './MarketOrder.css';
 
 interface MarketOrderProps {
-  onTrade?: (side: 'buy' | 'sell', size: number, leverage: number) => void;
+  symbol: string;
+  onTrade?: (
+    symbol: string,
+    side: 'buy' | 'sell',
+    size: number,
+    leverage: number
+  ) => void;
 }
 
-export const MarketOrder: React.FC<MarketOrderProps> = ({ onTrade }) => {
+export const MarketOrder: React.FC<MarketOrderProps> = ({
+  symbol,
+  onTrade,
+}) => {
   const [size, setSize] = useState(100);
   const [leverage, setLeverage] = useState(10);
 
@@ -38,8 +47,8 @@ export const MarketOrder: React.FC<MarketOrderProps> = ({ onTrade }) => {
   };
 
   const handleTrade = (side: 'buy' | 'sell') => {
-    onTrade?.(side, size, leverage);
-    console.log(`${side.toUpperCase()} order:`, { size, leverage });
+    onTrade?.(symbol, side, size, leverage);
+    console.log(`${side.toUpperCase()} order:`, { symbol, size, leverage });
   };
 
   return (

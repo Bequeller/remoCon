@@ -3,12 +3,8 @@ from fastapi.responses import JSONResponse
 
 from app.clients.binance_client import BinanceFuturesClient
 from app.models.schemas import Symbol, SymbolsResponse
-from app.services.cache import SymbolMetaCache
 
 router = APIRouter()
-
-# 서비스 인스턴스
-symbol_cache = SymbolMetaCache()
 
 
 @router.get(
@@ -20,7 +16,7 @@ async def get_symbols():
     client = BinanceFuturesClient()
 
     try:
-        exchange_info = await symbol_cache.get_exchange_info(client)
+        exchange_info = await client.get_exchange_info()
 
         # 거래 가능한 심볼만 필터링
         trading_symbols = []

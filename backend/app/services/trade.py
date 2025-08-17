@@ -1,71 +1,62 @@
-from __future__ import annotations
+# backend/app/services/trade.py
 
+import logging
 from decimal import ROUND_DOWN, Decimal
 from typing import Any
 
+from app.clients.binance_client import BinanceFuturesClient
+from app.models.schemas import TradeRequest
+from app.utils.errors import AppError
 
-def round_down_to_step(value: Decimal, step: Decimal) -> Decimal:
-    # intent: Binance stepSize floor
-    if step <= 0:
-        return value
-    n = (value / step).to_integral_value(rounding=ROUND_DOWN)
-    return n * step
+logger = logging.getLogger(__name__)
 
 
-def find_symbol_filters(
-    exchange_info: dict[str, Any], symbol: str
-) -> tuple[dict[str, Any], dict[str, Any]]:
-    symbols = exchange_info.get("symbols", [])
-    for s in symbols:
-        if s.get("symbol") == symbol:
-            lot_size = next(
-                (f for f in s.get("filters", []) if f.get("filterType") == "LOT_SIZE"),
-                {},
+class TradeService:
+    def __init__(self, binance_client: BinanceFuturesClient):
+        self.client = binance_client
+
+    async def _get_symbol_info(self, symbol: str) -> dict[str, Any]:
+        """Fetches exchange information for a specific symbol."""
+        exchange_info = await self.client.get_exchange_info()
+        for s in exchange_info.get("symbols", []):
+            if s.get("symbol") == symbol:
+                return s
+        raise AppError(f"Symbol {symbol} not found.")
+
+    async def place_order(self, order_data: TradeRequest) -> dict[str, Any]:
+        """Places a market order on Binance Futures."""
+        try:
+            # 1. Get symbol info (for quantity precision)
+            symbol_info = await self._get_symbol_info(order_data.symbol)
+            quantity_precision = int(symbol_info.get("quantityPrecision", 0))
+
+            # 2. Get mark price
+            mark_price_data = await self.client.get_mark_price(symbol=order_data.symbol)
+            mark_price = Decimal(mark_price_data["markPrice"])
+            if mark_price <= 0:
+                raise AppError("Invalid mark price.")
+
+            # 3. Calculate quantity from USDT size
+            size_in_usdt = Decimal(str(order_data.size))
+            quantity = size_in_usdt / mark_price
+
+            # 4. Format quantity based on precision
+            quantizer = Decimal("1e-" + str(quantity_precision))
+            formatted_quantity = str(quantity.quantize(quantizer, rounding=ROUND_DOWN))
+
+            # 5. Set leverage
+            await self.client.set_leverage(
+                symbol=order_data.symbol, leverage=order_data.leverage
             )
-            notional = next(
-                (
-                    f
-                    for f in s.get("filters", [])
-                    if f.get("filterType") == "MIN_NOTIONAL"
-                ),
-                {},
+
+            # 6. Place market order
+            order_result = await self.client.place_market_order(
+                symbol=order_data.symbol,
+                side=order_data.side.value.upper(),
+                quantity=formatted_quantity,
             )
-            return lot_size, notional
-    return {}, {}
+            return order_result
 
-
-def compute_order_quantity(
-    notional_usdt: float, mark_price: float, step_size_str: str, min_qty_str: str
-) -> Decimal:
-    step = Decimal(step_size_str)
-    min_qty = Decimal(min_qty_str)
-    raw_qty = Decimal(str(notional_usdt)) / Decimal(str(mark_price))
-    qty = round_down_to_step(raw_qty, step)
-    if qty < min_qty:
-        return Decimal("0")
-    return qty
-
-
-def validate_precision(
-    qty: Decimal, price: float, lot_size: dict[str, Any], symbol_meta: dict[str, Any]
-) -> tuple[bool, str]:
-    # intent: enforce quantityPrecision/pricePrecision and LOT_SIZE step alignment
-    try:
-        qty_prec = int(symbol_meta.get("quantityPrecision", 0) or 0)
-        price_prec = int(symbol_meta.get("pricePrecision", 0) or 0)
-        step = Decimal(lot_size.get("stepSize", "0.0"))
-        # check step alignment
-        if step > 0 and (qty % step) != 0:
-            return False, "PRECISION_VIOLATION"
-        # check decimal digits
-        qstr = format(qty.normalize(), "f")
-        qdec = len(qstr.split(".")[-1]) if "." in qstr else 0
-        if qdec > qty_prec:
-            return False, "PRECISION_VIOLATION"
-        pstr = format(Decimal(str(price)).normalize(), "f")
-        pdec = len(pstr.split(".")[-1]) if "." in pstr else 0
-        if pdec > price_prec:
-            return False, "PRECISION_VIOLATION"
-        return True, ""
-    except Exception:
-        return True, ""
+        except Exception as e:
+            logger.error(f"Error placing order for {order_data.symbol}: {e}")
+            raise AppError(f"Failed to place order: {e}") from e

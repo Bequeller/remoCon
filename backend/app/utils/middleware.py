@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 from collections.abc import Callable
@@ -7,9 +8,7 @@ from collections.abc import Callable
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from app.core.logging import setup_logger
-
-logger = setup_logger()
+logger = logging.getLogger(__name__)
 
 
 async def access_log_middleware(request: Request, call_next: Callable):

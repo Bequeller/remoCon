@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { SymbolSelector } from './components/SymbolSelector/SymbolSelector';
 import { MarketOrder } from './components/MarketOrder/MarketOrder';
 import { PositionsTable } from './components/PositionsTable/PositionsTable';
+import { tradeAPI } from './utils/api';
 import './App.css';
 
 function App() {
@@ -19,13 +20,25 @@ function App() {
     // 실제 구현에서는 API 호출
   };
 
-  const handleTrade = (
+  const handleTrade = async (
+    symbol: string,
     side: 'buy' | 'sell',
     size: number,
     leverage: number
   ) => {
-    console.log(`${side.toUpperCase()} trade:`, { size, leverage });
-    // 실제 구현에서는 API 호출
+    try {
+      const tradeData = {
+        symbol,
+        size, // notional -> size
+        leverage,
+        side, // side.toUpperCase() 제거
+      };
+      const result = await tradeAPI.placeOrder(tradeData); // postTrade -> placeOrder
+      console.log('Trade successful:', result);
+      // 포지션 목록 새로고침 등의 후속 조치
+    } catch (error) {
+      console.error('Trade failed:', error);
+    }
   };
 
   return (
@@ -49,7 +62,7 @@ function App() {
           </section>
 
           <section className="market-order-section">
-            <MarketOrder onTrade={handleTrade} />
+            <MarketOrder symbol={selectedSymbol} onTrade={handleTrade} />
           </section>
 
           <section className="positions-section">

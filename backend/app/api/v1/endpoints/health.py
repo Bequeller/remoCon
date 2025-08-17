@@ -5,7 +5,7 @@ from app.core.config import get_environment_summary
 router = APIRouter()
 
 
-@router.get("/health")
+@router.get("/healthz")
 async def health():
     """백엔드 서버 자체 헬스체크"""
     env_summary = get_environment_summary()

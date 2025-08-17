@@ -28,13 +28,7 @@ def setup_logger() -> logging.Logger:
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("requests").setLevel(logging.WARNING)
 
-    # 미들웨어 로그 레벨 조정
-    logging.getLogger("app.utils.middleware").setLevel(logging.WARNING)
-
     # API 키 모니터링 로그는 유지 (중요한 정보)
     logging.getLogger("app.core.security").setLevel(logging.INFO)
-
-    # 성공적인 요청 로그 완전 제거
-    logging.getLogger("app.utils.middleware").setLevel(logging.ERROR)
 
     return logger

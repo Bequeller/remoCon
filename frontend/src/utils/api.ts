@@ -5,12 +5,27 @@ export const API_CONFIG = {
     symbols: '/api/symbols',
     health: '/healthz',
     positions: '/api/positions',
-    trade: '/api/trade',
+    trade: '/api/order', // 경로 수정
   },
 };
 
+interface Symbol {
+  symbol: string;
+  baseAsset: string;
+  quoteAsset: string;
+}
+
+interface Position {
+  symbol: string;
+  positionAmt: string;
+  entryPrice: string;
+  leverage: number;
+  unRealizedProfit: string;
+  marginType: string;
+}
+
 // API 호출 함수 (확장성 있는 구조)
-export const apiCall = async (endpoint: string): Promise<any> => {
+export const apiCall = async <T>(endpoint: string): Promise<T> => {
   try {
     const url = `${API_CONFIG.baseURL}${endpoint}`;
     const response = await fetch(url);
@@ -26,20 +41,20 @@ export const apiCall = async (endpoint: string): Promise<any> => {
 
 // 심볼 관련 API 함수들
 export const symbolsAPI = {
-  fetchSymbols: async (): Promise<any[]> => {
-    const data = await apiCall(API_CONFIG.endpoints.symbols);
+  fetchSymbols: async (): Promise<Symbol[]> => {
+    const data = await apiCall<{ symbols: Symbol[] }>(API_CONFIG.endpoints.symbols);
     return data.symbols || [];
   },
 };
 
 // 포지션 관련 API 함수들
 export const positionsAPI = {
-  fetchPositions: async (): Promise<any[]> => {
-    const data = await apiCall(API_CONFIG.endpoints.positions);
+  fetchPositions: async (): Promise<Position[]> => {
+    const data = await apiCall<Position[]>(API_CONFIG.endpoints.positions);
     return data || [];
   },
 
-  closePosition: async (symbol: string): Promise<any> => {
+  closePosition: async (symbol: string): Promise<TradeResponse> => {
     const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.positions}/${symbol}/close`, {
       method: 'POST',
       headers: {
@@ -56,9 +71,26 @@ export const positionsAPI = {
   },
 };
 
+interface TradeRequest {
+  symbol: string;
+  size: number; // notional -> size
+  leverage: number;
+  side: 'buy' | 'sell'; // 'BUY' | 'SELL' -> 'buy' | 'sell'
+}
+
+interface TradeResponse {
+  // 바이낸스 응답이 복잡하므로, 주요 필드만 정의하거나 any로 처리
+  orderId: number;
+  symbol: string;
+  side: string;
+  type: string;
+  status: string;
+  [key: string]: any; // 다른 필드들도 포함 가능
+}
+
 // 거래 관련 API 함수들
 export const tradeAPI = {
-  placeTrade: async (tradeData: any): Promise<any> => {
+  placeOrder: async (tradeData: TradeRequest): Promise<TradeResponse> => {
     const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.trade}`, {
       method: 'POST',
       headers: {
@@ -68,7 +100,8 @@ export const tradeAPI = {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
     return await response.json();

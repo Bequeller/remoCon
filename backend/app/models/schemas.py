@@ -1,14 +1,25 @@
+from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # intent: shared API request/response schemas for mock endpoints
+class HealthCheck(BaseModel):
+    is_testnet: bool = Field(..., description="바이낸스 테스트넷 사용 여부")
+    symbols: list[dict] = Field(..., description="거래 가능한 모든 심볼 정보")
+
+
+class OrderSide(str, Enum):
+    BUY = "buy"
+    SELL = "sell"
+
+
 class TradeRequest(BaseModel):
-    symbol: str
-    notional: float
-    leverage: int
-    side: Literal["BUY", "SELL"]
+    symbol: str = Field(..., description="Trading symbol, e.g., BTCUSDT")
+    side: OrderSide = Field(..., description="Order side: 'buy' or 'sell'")
+    size: float = Field(..., gt=0, description="Order size in USDT")
+    leverage: int = Field(..., ge=1, le=100, description="Leverage")
 
 
 class TradeResponse(BaseModel):
