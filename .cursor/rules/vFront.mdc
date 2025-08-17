@@ -1,6 +1,6 @@
 ---
 globs: *.ts,*.tsx,*.css,*.html
-alwaysApply: false
+alwaysApply: true
 ---
 최우선 순위
 1. 타입 안전성: TypeScript 도입.

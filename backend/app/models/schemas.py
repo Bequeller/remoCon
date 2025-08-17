@@ -29,6 +29,16 @@ class Position(BaseModel):
     marginType: str
 
 
+class Symbol(BaseModel):
+    symbol: str
+    baseAsset: str
+    quoteAsset: str
+
+
+class SymbolsResponse(BaseModel):
+    symbols: list[Symbol]
+
+
 class ErrorResponse(BaseModel):
     requestId: str
     code: str

@@ -1,6 +1,6 @@
 ---
 glob: *.py
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Role

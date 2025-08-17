@@ -6,16 +6,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/healthz': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/debug': {
-        target: 'http://localhost:3000',
+      // 모든 백엔드 API를 한 번에 프록시 (확장성 있는 설정)
+      '^/(api|healthz|debug|symbols|[a-z]+)$': {
+        target: 'http://backend:3000',
         changeOrigin: true,
       },
     },

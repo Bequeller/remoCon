@@ -1,4 +1,4 @@
-// intent: 심볼 선택기 React 컴포넌트
+// intent: 심볼 선택기 React 컴포넌트 (검색창 형태)
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './SymbolSelector.css';
 
@@ -13,6 +13,40 @@ interface SymbolSelectorProps {
   initialSymbol?: string;
 }
 
+// API 설정 (확장성 있는 구조)
+const API_CONFIG = {
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
+  endpoints: {
+    symbols: '/symbols',
+    health: '/healthz',
+    positions: '/api/positions',
+    trade: '/api/trade',
+  },
+};
+
+// API 호출 함수 (확장성 있는 구조)
+const apiCall = async (endpoint: string): Promise<unknown> => {
+  try {
+    const url = `${API_CONFIG.baseURL}${endpoint}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to fetch ${endpoint}:`, error);
+    throw error;
+  }
+};
+
+// 심볼 목록 조회 함수
+const fetchSymbols = async (): Promise<Symbol[]> => {
+  const data = (await apiCall(API_CONFIG.endpoints.symbols)) as {
+    symbols?: Symbol[];
+  };
+  return data.symbols || [];
+};
+
 export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   onSymbolChange,
   initialSymbol = 'BTCUSDT',
@@ -23,6 +57,8 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   const [symbols, setSymbols] = useState<Symbol[]>([]);
   const [filteredSymbols, setFilteredSymbols] = useState<Symbol[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState({
     top: 0,
     left: 0,
@@ -30,28 +66,35 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // 초기 심볼 데이터 로드
   useEffect(() => {
-    // 임시 데이터 (실제 API 연결 전)
-    const tempSymbols: Symbol[] = [
-      { symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' },
-      { symbol: 'ETHUSDT', baseAsset: 'ETH', quoteAsset: 'USDT' },
-      { symbol: 'BNBUSDT', baseAsset: 'BNB', quoteAsset: 'USDT' },
-      { symbol: 'ADAUSDT', baseAsset: 'ADA', quoteAsset: 'USDT' },
-      { symbol: 'SOLUSDT', baseAsset: 'SOL', quoteAsset: 'USDT' },
-      { symbol: 'DOTUSDT', baseAsset: 'DOT', quoteAsset: 'USDT' },
-      { symbol: 'LINKUSDT', baseAsset: 'LINK', quoteAsset: 'USDT' },
-      { symbol: 'MATICUSDT', baseAsset: 'MATIC', quoteAsset: 'USDT' },
-      { symbol: 'AVAXUSDT', baseAsset: 'AVAX', quoteAsset: 'USDT' },
-      { symbol: 'ATOMUSDT', baseAsset: 'ATOM', quoteAsset: 'USDT' },
-    ];
-    setSymbols(tempSymbols);
-    setFilteredSymbols(tempSymbols);
+    const loadSymbols = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const fetchedSymbols = await fetchSymbols();
+        setSymbols(fetchedSymbols);
+        setFilteredSymbols(fetchedSymbols);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load symbols');
+        // 에러 시 기본 심볼들로 폴백
+        const fallbackSymbols: Symbol[] = [
+          { symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' },
+          { symbol: 'ETHUSDT', baseAsset: 'ETH', quoteAsset: 'USDT' },
+        ];
+        setSymbols(fallbackSymbols);
+        setFilteredSymbols(fallbackSymbols);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSymbols();
   }, []);
 
-  // 검색 필터링
+  // 검색 필터링 (실시간)
   useEffect(() => {
     const filtered = symbols.filter(
       (symbol) =>
@@ -74,8 +117,8 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   );
 
   const calculateDropdownPosition = useCallback(() => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
       const dropdownHeight = 300; // max-height
@@ -116,22 +159,6 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isOpen) return;
-
-      // 검색 기능: 알파벳/숫자 입력 시 검색어에 추가
-      if (event.key.length === 1 && /[a-zA-Z0-9]/.test(event.key)) {
-        event.preventDefault();
-        setSearchTerm((prev) => prev + event.key.toUpperCase());
-        setSelectedIndex(-1);
-        return;
-      }
-
-      // 백스페이스: 검색어에서 마지막 문자 제거
-      if (event.key === 'Backspace') {
-        event.preventDefault();
-        setSearchTerm((prev) => prev.slice(0, -1));
-        setSelectedIndex(-1);
-        return;
-      }
 
       switch (event.key) {
         case 'ArrowDown':
@@ -191,26 +218,35 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     calculateDropdownPosition,
   ]);
 
-  const toggleDropdown = () => {
+  const handleInputFocus = () => {
+    setIsOpen(true);
+    calculateDropdownPosition();
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
     if (!isOpen) {
+      setIsOpen(true);
       calculateDropdownPosition();
-      setSearchTerm('');
     }
-    setIsOpen(!isOpen);
   };
 
   return (
     <div className="symbol-selector-wrapper">
       <div className="symbol-selector" ref={dropdownRef}>
-        <button
-          ref={buttonRef}
-          type="button"
-          className="symbol-selector-btn"
-          onClick={toggleDropdown}
-        >
-          <span className="selected-symbol">{selectedSymbol}</span>
-          <span className={`selector-arrow ${isOpen ? 'open' : ''}`}>▼</span>
-        </button>
+        <div className="symbol-search-container">
+          <span className="selected-symbol-display">{selectedSymbol}</span>
+          <input
+            ref={inputRef}
+            type="text"
+            className="symbol-search-input"
+            placeholder="심볼 검색 (예: BTC, ETH, USDT)"
+            value={searchTerm}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            autoComplete="off"
+          />
+        </div>
 
         {isOpen && (
           <div
@@ -221,13 +257,18 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
               width: `${dropdownPosition.width}px`,
             }}
           >
-            {searchTerm && (
-              <div className="search-indicator">
-                <span className="search-text">검색: {searchTerm}</span>
-              </div>
-            )}
+            <div className="search-info">
+              <span className="search-count">
+                {filteredSymbols.length}개 심볼
+                {searchTerm && ` (검색: "${searchTerm}")`}
+              </span>
+            </div>
             <div className="symbol-list">
-              {filteredSymbols.length === 0 ? (
+              {loading ? (
+                <div className="loading-indicator">Loading symbols...</div>
+              ) : error ? (
+                <div className="error-message">{error}</div>
+              ) : filteredSymbols.length === 0 ? (
                 <div className="no-symbols">
                   {searchTerm
                     ? `"${searchTerm}" 검색 결과가 없습니다`
