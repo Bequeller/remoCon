@@ -17,6 +17,12 @@ async def lifespan(app: FastAPI):
     app.state.binance_client = BinanceFuturesClient(
         use_testnet=binance_config["use_testnet"]
     )
+
+    # API 키 모니터링 시작
+    from app.core.security import api_key_monitor
+
+    await api_key_monitor.start_monitoring()
+
     try:
         yield
     finally:

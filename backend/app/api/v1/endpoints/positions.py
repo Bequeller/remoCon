@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Request
 
-from app.services.position_service import position_service
+from app.services.position import position_service
 from app.utils.errors import error_response
 
 router = APIRouter()

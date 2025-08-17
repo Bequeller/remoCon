@@ -29,6 +29,18 @@ class Position(BaseModel):
     marginType: str
 
 
+class Balance(BaseModel):
+    """Futures 잔고 정보"""
+
+    accountAlias: str
+    asset: str
+    balance: str
+    crossWalletBalance: str
+    crossUnPnl: str
+    availableBalance: str
+    maxWithdrawAmount: str
+
+
 class Symbol(BaseModel):
     symbol: str
     baseAsset: str

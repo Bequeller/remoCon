@@ -36,7 +36,7 @@ def _int_env(name: str, default: int) -> int:
 # =============================================================================
 BINANCE_API_KEY: Optional[str] = os.getenv("BINANCE_API_KEY")
 BINANCE_SECRET_KEY: Optional[str] = os.getenv("BINANCE_API_SECRET")
-USE_TESTNET: bool = _bool_env("USE_TESTNET", True)
+BINANCE_TESTNET: bool = _bool_env("BINANCE_TESTNET", True)
 
 
 # Binance API 설정 검증
@@ -45,7 +45,7 @@ def get_binance_config() -> dict:
     return {
         "api_key": BINANCE_API_KEY,
         "api_secret": BINANCE_SECRET_KEY,
-        "use_testnet": USE_TESTNET,
+        "use_testnet": BINANCE_TESTNET,
         "has_valid_keys": bool(BINANCE_API_KEY and BINANCE_SECRET_KEY),
     }
 

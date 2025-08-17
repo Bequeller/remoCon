@@ -1,12 +1,13 @@
 import hashlib
 import hmac
 import logging
-import os
 import time
 from typing import Any, Optional
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential_jitter
+
+from app.core.config import BINANCE_API_KEY, BINANCE_SECRET_KEY, BINANCE_TESTNET
 
 # 로거 설정
 logger = logging.getLogger(__name__)
@@ -22,12 +23,14 @@ class BinanceFuturesClient:
         self,
         api_key: Optional[str] = None,
         api_secret: Optional[str] = None,
-        use_testnet: bool = True,
+        use_testnet: Optional[bool] = None,
         timeout_seconds: float = 5.0,
     ) -> None:
-        self.api_key = api_key or os.getenv("BINANCE_API_KEY") or ""
-        self.api_secret = api_secret or os.getenv("BINANCE_API_SECRET") or ""
-        self.use_testnet = use_testnet if use_testnet is not None else True
+        self.api_key = api_key or BINANCE_API_KEY or ""
+        self.api_secret = api_secret or BINANCE_SECRET_KEY or ""
+
+        # config.py에서 testnet 설정 가져오기
+        self.use_testnet = use_testnet if use_testnet is not None else BINANCE_TESTNET
         self.base_url = (
             "https://testnet.binancefuture.com"
             if self.use_testnet
@@ -120,6 +123,30 @@ class BinanceFuturesClient:
             return result
         except Exception as e:
             logger.error(f"Failed to get position risk: {str(e)}")
+            raise
+
+    async def get_account_info(self) -> dict[str, Any]:
+        """계좌 정보 조회 (API 키 검증용)"""
+        logger.info("Getting account information")
+        try:
+            result = await self._signed_request("GET", "/fapi/v2/account")
+            logger.info("Successfully retrieved account information")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to get account info: {str(e)}")
+            raise
+
+    async def get_balance(self) -> list[dict[str, Any]]:
+        """Futures 잔고 정보 조회"""
+        logger.info("Getting futures balance information")
+        try:
+            result = await self._signed_request("GET", "/fapi/v2/balance")
+            logger.info(
+                f"Successfully retrieved balance data: {len(result) if isinstance(result, list) else 'single item'}"
+            )
+            return result
+        except Exception as e:
+            logger.error(f"Failed to get balance: {str(e)}")
             raise
 
     async def _signed_request(

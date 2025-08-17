@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from app.core.config import get_environment_summary
 
@@ -49,36 +49,38 @@ async def binance_health():
 @router.get("/health/binance/api-key")
 async def validate_api_key():
     """Binance API Key 유효성 검증 엔드포인트"""
-    from app.clients.binance_client import BinanceFuturesClient
-
-    client = BinanceFuturesClient()
+    from app.core.security import get_api_key_status
 
     try:
-        # API Key가 설정되어 있는지 확인
-        if not client.api_key or not client.api_secret:
-            raise HTTPException(
-                status_code=400, detail="API key or secret is not configured"
-            )
-
-        # get_position_risk를 사용하여 API Key 유효성 검증
-        # 빈 파라미터로 호출하면 전체 포지션 정보를 가져옴 (권한 검증용)
-        await client.get_position_risk()
+        status = await get_api_key_status()
 
         return {
-            "status": "valid",
-            "message": "API key is valid and has required permissions",
-            "testnet": client.use_testnet,
+            "status": "valid" if status.is_valid else "invalid",
+            "message": (
+                "API key is valid and has required permissions"
+                if status.is_valid
+                else status.error_message
+            ),
+            "details": {
+                "is_valid": status.is_valid,
+                "has_futures_permission": status.has_futures_permission,
+                "rate_limit_remaining": status.rate_limit_remaining,
+                "last_check": status.last_check.isoformat(),
+                "error_message": status.error_message,
+            },
+            "testnet": True,  # config에서 가져오도록 수정 필요
         }
 
-    except HTTPException:
-        # 이미 HTTPException이면 그대로 재발생
-        raise
     except Exception as e:
-        # API Key가 유효하지 않거나 권한이 없는 경우
         return {
-            "status": "invalid",
+            "status": "error",
             "message": f"API key validation failed: {str(e)}",
-            "testnet": client.use_testnet,
+            "details": {
+                "is_valid": False,
+                "has_futures_permission": False,
+                "rate_limit_remaining": 0,
+                "last_check": None,
+                "error_message": str(e),
+            },
+            "testnet": True,
         }
-    finally:
-        await client.close()

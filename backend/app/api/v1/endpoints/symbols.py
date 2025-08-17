@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from app.clients.binance_client import BinanceFuturesClient
 from app.models.schemas import Symbol, SymbolsResponse
-from app.services.cache_service import SymbolMetaCache
+from app.services.cache import SymbolMetaCache
 
 router = APIRouter()
 

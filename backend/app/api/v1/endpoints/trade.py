@@ -5,9 +5,9 @@ from app.clients.binance_client import BinanceFuturesClient
 from app.core.logging import setup_logger
 from app.core.security import require_auth
 from app.models.schemas import TradeRequest, TradeResponse
-from app.services.cache_service import PriceCache, SymbolMetaCache
-from app.services.leverage_service import LeverageManager
-from app.services.trade_service import (
+from app.services.cache import PriceCache, SymbolMetaCache
+from app.services.leverage import LeverageManager
+from app.services.trade import (
     compute_order_quantity,
     find_symbol_filters,
     validate_precision,
