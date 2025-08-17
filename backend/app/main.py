@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1.api import api_router
+from app.api.v1.endpoints import health, positions, symbols, trade
 from app.clients.binance_client import BinanceFuturesClient
 from app.core.config import CORS_ORIGIN, get_binance_config
 from app.utils.middleware import access_log_middleware
@@ -39,4 +39,7 @@ app.add_middleware(
 )
 
 # API 라우터 등록
-app.include_router(api_router)
+app.include_router(health.router, tags=["health"])
+app.include_router(trade.router, prefix="/api", tags=["trade"])
+app.include_router(positions.router, prefix="/api", tags=["positions"])
+app.include_router(symbols.router, prefix="/api", tags=["symbols"])
