@@ -11,6 +11,7 @@ from app.core.config import BINANCE_API_KEY, BINANCE_SECRET_KEY, BINANCE_TESTNET
 
 # 로거 설정
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)  # DEBUG 로그 제거
 
 
 class BinanceFuturesClient:

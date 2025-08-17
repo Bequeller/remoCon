@@ -36,7 +36,9 @@ async def access_log_middleware(request: Request, call_next: Callable):
             },
         )
     elapsed = int((time.perf_counter() - start) * 1000)
-    logger.info(
-        f"reqId={req_id} route={request.url.path} status={response.status_code} latencyMs={elapsed}"
-    )
+    # 에러 요청만 로깅 (성공적인 요청은 로그 제거)
+    if response.status_code >= 400:
+        logger.error(
+            f"reqId={req_id} route={request.url.path} status={response.status_code} latencyMs={elapsed}"
+        )
     return response

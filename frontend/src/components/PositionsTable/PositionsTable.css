@@ -222,6 +222,19 @@
   transform: scale(1.02);
 }
 
+.position-close:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.position-close:disabled:hover {
+  background: transparent;
+  color: var(--sell);
+  border-color: var(--sell);
+  transform: none;
+}
+
 /* 빈 상태 */
 .positions-empty {
   display: flex;

@@ -38,6 +38,22 @@ export const positionsAPI = {
     const data = await apiCall(API_CONFIG.endpoints.positions);
     return data || [];
   },
+
+  closePosition: async (symbol: string): Promise<any> => {
+    const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.positions}/${symbol}/close`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  },
 };
 
 // 거래 관련 API 함수들

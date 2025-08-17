@@ -22,6 +22,9 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [closingPositions, setClosingPositions] = useState<Set<string>>(
+    new Set()
+  );
 
   // 실제 포지션 데이터 로드
   useEffect(() => {
@@ -51,12 +54,45 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const handleClosePosition = (symbol: string) => {
-    if (onPositionClose) {
-      onPositionClose(symbol);
-    } else {
-      // 기본 동작: 포지션 제거 (UI에서만)
+  const handleClosePosition = async (symbol: string) => {
+    // 이미 청산 중인 경우 중복 요청 방지
+    if (closingPositions.has(symbol)) {
+      return;
+    }
+
+    try {
+      // 청산 시작 상태 설정
+      setClosingPositions((prev) => new Set(prev).add(symbol));
+
+      // 백엔드 API를 통해 실제 포지션 청산
+      const result = await positionsAPI.closePosition(symbol);
+
+      console.log(`Position closed successfully for ${symbol}:`, result);
+
+      // 성공 시 포지션 목록에서 제거
       setPositions((prev) => prev.filter((pos) => pos.symbol !== symbol));
+
+      // 부모 컴포넌트에 알림 (있는 경우)
+      if (onPositionClose) {
+        onPositionClose(symbol);
+      }
+    } catch (error) {
+      console.error(`Failed to close position for ${symbol}:`, error);
+
+      // 에러 메시지를 사용자에게 표시
+      setError(`Failed to close position for ${symbol}. Please try again.`);
+
+      // 3초 후 에러 메시지 제거
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
+    } finally {
+      // 청산 완료 상태 제거
+      setClosingPositions((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(symbol);
+        return newSet;
+      });
     }
   };
 
@@ -150,8 +186,11 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                           className="position-close"
                           onClick={() => handleClosePosition(position.symbol)}
                           title={`Close ${position.symbol} position`}
+                          disabled={closingPositions.has(position.symbol)}
                         >
-                          CLOSE
+                          {closingPositions.has(position.symbol)
+                            ? 'CLOSING...'
+                            : 'CLOSE'}
                         </button>
                       </td>
                     </tr>
