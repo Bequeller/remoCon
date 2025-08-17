@@ -26,7 +26,7 @@ class BinanceFuturesClient:
         timeout_seconds: float = 5.0,
     ) -> None:
         self.api_key = api_key or os.getenv("BINANCE_API_KEY") or ""
-        self.api_secret = api_secret or os.getenv("BINANCE_SECRET_KEY") or ""
+        self.api_secret = api_secret or os.getenv("BINANCE_API_SECRET") or ""
         self.use_testnet = use_testnet if use_testnet is not None else True
         self.base_url = (
             "https://testnet.binancefuture.com"

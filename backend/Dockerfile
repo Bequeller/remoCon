@@ -29,7 +29,6 @@ ENV PYTHONUNBUFFERED=1
 
 # 애플리케이션 코드 복사
 COPY app/ ./app/
-COPY external/ ./external/
 
 # 포트 노출
 EXPOSE 3000

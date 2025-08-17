@@ -35,7 +35,7 @@ def _int_env(name: str, default: int) -> int:
 # Binance API Configuration
 # =============================================================================
 BINANCE_API_KEY: Optional[str] = os.getenv("BINANCE_API_KEY")
-BINANCE_SECRET_KEY: Optional[str] = os.getenv("BINANCE_SECRET_KEY")
+BINANCE_SECRET_KEY: Optional[str] = os.getenv("BINANCE_API_SECRET")
 USE_TESTNET: bool = _bool_env("USE_TESTNET", True)
 
 
