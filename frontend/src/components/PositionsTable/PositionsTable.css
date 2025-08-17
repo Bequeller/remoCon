@@ -15,21 +15,78 @@
   background: var(--bg-card);
   border-radius: var(--radius-sm);
   overflow: hidden;
+  table-layout: fixed;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 컬럼 너비 설정 */
+.positions-table th:nth-child(1),
+.positions-table td:nth-child(1) {
+  width: 35%;
+}
+
+.positions-table th:nth-child(2),
+.positions-table td:nth-child(2) {
+  width: 25%;
+}
+
+.positions-table th:nth-child(3),
+.positions-table td:nth-child(3) {
+  width: 40%;
 }
 
 /* 테이블 헤더 */
 .positions-table thead {
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+  border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
 }
 
 .positions-table th {
   padding: var(--space-md) var(--space-lg);
   font-size: var(--font-sm);
-  font-weight: var(--font-medium);
-  color: var(--text-muted);
-  text-align: left;
+  font-weight: var(--font-semibold);
+  color: var(--text);
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+}
+
+.positions-table th::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+}
+
+/* 컬럼별 정렬 */
+.positions-table th:nth-child(1),
+.positions-table td:nth-child(1) {
+  text-align: left;
+}
+
+.positions-table th:nth-child(2),
+.positions-table td:nth-child(2) {
+  text-align: center;
+}
+
+.positions-table th:nth-child(3),
+.positions-table td:nth-child(3) {
+  text-align: center;
 }
 
 /* 테이블 바디 */
@@ -63,25 +120,49 @@
   color: var(--text);
 }
 
-.position-status {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
+/* 포지션 사이드 CHIP */
+.position-side {
+  text-align: center;
 }
 
-.status-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
+.side-badge {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: default;
+  transition: all var(--transition-fast);
+  min-width: 50px;
+  text-align: center;
 }
 
-.status-indicator.long {
-  background: var(--buy);
+.side-badge.long {
+  background: transparent;
+  color: var(--buy);
+  border: 1px solid var(--buy);
+  min-width: 50px;
+  text-align: center;
 }
 
-.status-indicator.short {
-  background: var(--sell);
+.side-badge.long:hover {
+  background: rgba(14, 203, 129, 0.1);
+  border-color: var(--buy);
+}
+
+.side-badge.short {
+  background: transparent;
+  color: var(--sell);
+  border: 1px solid var(--sell);
+  min-width: 50px;
+  text-align: center;
+}
+
+.side-badge.short:hover {
+  background: rgba(246, 70, 93, 0.1);
+  border-color: var(--sell);
 }
 
 /* 포지션 자산 */
@@ -109,24 +190,36 @@
   color: var(--sell);
 }
 
+/* 포지션 닫기 셀 */
+.position-close-cell {
+  text-align: center;
+  padding: var(--space-md) var(--space-lg);
+}
+
 /* 포지션 닫기 버튼 */
 .position-close {
   padding: var(--space-xs) var(--space-sm);
-  border: 1px solid var(--border);
-  background: var(--bg-input);
-  color: var(--text-muted);
+  border: 1px solid var(--sell);
+  background: transparent;
+  color: var(--sell);
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--font-xs);
-  font-weight: var(--font-medium);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   transition: all var(--transition-fast);
   white-space: nowrap;
+  min-width: 50px;
+  display: inline-block;
+  text-align: center;
 }
 
 .position-close:hover {
+  background: var(--sell);
+  color: var(--bg);
   border-color: var(--sell);
-  color: var(--sell);
-  background: rgba(246, 70, 93, 0.1);
+  transform: scale(1.02);
 }
 
 /* 빈 상태 */
@@ -236,11 +329,6 @@
   }
 
   .position-leverage {
-    display: none;
-  }
-
-  .positions-table th:nth-child(3),
-  .positions-table td:nth-child(3) {
     display: none;
   }
 }

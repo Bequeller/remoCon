@@ -65,15 +65,6 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
     return amount > 0 ? 'long' : 'short';
   };
 
-  const formatNumber = (value: string, decimals: number = 2) => {
-    return parseFloat(value).toFixed(decimals);
-  };
-
-  const getProfitColor = (profit: string) => {
-    const value = parseFloat(profit);
-    return value >= 0 ? 'positive' : 'negative';
-  };
-
   // 에러 상태 표시
   if (error) {
     return (
@@ -138,46 +129,29 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
               <thead>
                 <tr>
                   <th scope="col">Symbol</th>
-                  <th scope="col">Size</th>
-                  <th scope="col">Entry Price</th>
-                  <th scope="col">Leverage</th>
-                  <th scope="col">PnL</th>
+                  <th scope="col">Side</th>
                   <th scope="col">Close</th>
                 </tr>
               </thead>
               <tbody>
                 {positions.map((position) => {
                   const side = getPositionSide(position.positionAmt);
-                  const profitColor = getProfitColor(position.unRealizedProfit);
 
                   return (
                     <tr key={position.symbol} className="position-row">
-                      <td className="position-symbol">
-                        <div className="position-status">
-                          <span className={`status-indicator ${side}`}></span>
-                          {position.symbol}
-                        </div>
+                      <td className="position-symbol">{position.symbol}</td>
+                      <td className="position-side">
+                        <span className={`side-badge ${side}`}>
+                          {side.toUpperCase()}
+                        </span>
                       </td>
-                      <td className="position-size">
-                        {formatNumber(position.positionAmt, 4)}
-                      </td>
-                      <td className="position-entry">
-                        ${formatNumber(position.entryPrice)}
-                      </td>
-                      <td className="position-leverage">
-                        {position.leverage}x
-                      </td>
-                      <td className={`position-pnl ${profitColor}`}>
-                        {parseFloat(position.unRealizedProfit) >= 0 ? '+' : ''}$
-                        {formatNumber(position.unRealizedProfit)}
-                      </td>
-                      <td>
+                      <td className="position-close-cell">
                         <button
                           className="position-close"
                           onClick={() => handleClosePosition(position.symbol)}
                           title={`Close ${position.symbol} position`}
                         >
-                          Close
+                          CLOSE
                         </button>
                       </td>
                     </tr>
