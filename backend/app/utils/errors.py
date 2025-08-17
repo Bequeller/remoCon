@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import uuid
-from fastapi.responses import JSONResponse
+from typing import Optional
+
 from fastapi import Request
+from fastapi.responses import JSONResponse
 
 
-def error_response(code: str, message: str, status_code: int = 400, request: Request | None = None) -> JSONResponse:
+def error_response(
+    code: str, message: str, status_code: int = 400, request: Optional[Request] = None
+) -> JSONResponse:
     # intent: standard error envelope
     req_id = None
     if request is not None and hasattr(request, "state"):
@@ -18,5 +22,3 @@ def error_response(code: str, message: str, status_code: int = 400, request: Req
             "message": message,
         },
     )
-
-

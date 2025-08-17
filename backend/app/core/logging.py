@@ -17,5 +17,3 @@ def setup_logger() -> logging.Logger:
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger
-
-

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from decimal import Decimal, ROUND_DOWN
-from typing import Any, Dict, Tuple
+from decimal import ROUND_DOWN, Decimal
+from typing import Any
 
 
 def round_down_to_step(value: Decimal, step: Decimal) -> Decimal:
@@ -13,8 +13,8 @@ def round_down_to_step(value: Decimal, step: Decimal) -> Decimal:
 
 
 def find_symbol_filters(
-    exchange_info: Dict[str, Any], symbol: str
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    exchange_info: dict[str, Any], symbol: str
+) -> tuple[dict[str, Any], dict[str, Any]]:
     symbols = exchange_info.get("symbols", [])
     for s in symbols:
         if s.get("symbol") == symbol:
@@ -47,8 +47,8 @@ def compute_order_quantity(
 
 
 def validate_precision(
-    qty: Decimal, price: float, lot_size: Dict[str, Any], symbol_meta: Dict[str, Any]
-) -> Tuple[bool, str]:
+    qty: Decimal, price: float, lot_size: dict[str, Any], symbol_meta: dict[str, Any]
+) -> tuple[bool, str]:
     # intent: enforce quantityPrecision/pricePrecision and LOT_SIZE step alignment
     try:
         qty_prec = int(symbol_meta.get("quantityPrecision", 0) or 0)

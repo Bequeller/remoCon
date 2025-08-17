@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import time
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
-from fastapi import Request
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from app.logging_utils import setup_logger
-
+from app.core.logging import setup_logger
 
 logger = setup_logger()
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from cachetools import TTLCache
 
@@ -10,9 +10,9 @@ class SymbolMetaCache:
 
     def __init__(self, ttl_seconds: int = 30) -> None:
         self._ttl = ttl_seconds
-        self._cache: TTLCache[str, Dict[str, Any]] = TTLCache(maxsize=2, ttl=self._ttl)
+        self._cache: TTLCache[str, dict[str, Any]] = TTLCache(maxsize=2, ttl=self._ttl)
 
-    async def get_exchange_info(self, client) -> Dict[str, Any]:
+    async def get_exchange_info(self, client) -> dict[str, Any]:
         key = "exchangeInfo"
         if key in self._cache:
             return self._cache[key]
@@ -28,7 +28,7 @@ class PriceCache:
         self._ttl = ttl_seconds
         self._cache: TTLCache[str, Any] = TTLCache(maxsize=512, ttl=self._ttl)
 
-    async def get_mark_price(self, client, symbol: Optional[str] = None) -> Any:
+    async def get_mark_price(self, client, symbol: str | None = None) -> Any:
         key = symbol or "__ALL__"
         if key in self._cache:
             return self._cache[key]

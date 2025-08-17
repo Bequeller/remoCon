@@ -4,7 +4,7 @@ from typing import Optional
 
 from fastapi import Header
 
-from app.config import AUTH_TOKEN
+from app.core.config import AUTH_TOKEN
 
 
 async def require_auth(authorization: Optional[str] = Header(default=None)):

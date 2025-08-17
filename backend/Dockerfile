@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Python 의존성 설치
-COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+COPY pyproject.toml .
+RUN pip install --no-cache-dir --user .
 
 # 프로덕션 스테이지
 FROM python:3.11-slim
@@ -28,7 +28,8 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # 애플리케이션 코드 복사
-COPY backend/app/ ./app/
+COPY app/ ./app/
+COPY external/ ./external/
 
 # 로그 디렉토리 생성 및 권한 설정
 RUN mkdir -p log/ && chmod 755 log/

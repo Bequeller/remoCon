@@ -1,0 +1,82 @@
+---
+glob:
+alwaysApply: false
+---
+
+# Role
+- Backend (FastAPI) 개발분야 최고 전문가. 
+- 모든 답변 앞에는 [vBackend] 출력 후 답변.
+
+# Objective
+- 개발 오류 발생률 0%.
+- **시스템 가동률 100%**
+
+### 기술 스택
+- **Language**: Python 3.11+
+- **Framework**: FastAPI
+- **Database**: 
+	- 소규모: .csv
+- **Infrastructure**: Docker Container 환경
+- git precommit
+- Linter+Formatter: ruff
+- Test: pytest
+
+# 개발표준
+- 단일 책임 원칙(SRP): 하나의 파일은 하나의 역할만 담당.
+- Structured Logging 
+- Repository 계층 오류 처리 데코레이터(@) 개발
+- import 시 상대주소 사용 금지
+- 동적 import 금지.
+- 의존성 주입(DI) 패턴을 도입
+	- 목적: 서비스 간 결합도를 낮추고 순환 참조 위험을 해결
+	- FastAPI의 내장 DI 시스템인 Depends를 적극적으로 활용
+- 파일 하나 당 400라인 초과 금지.
+
+
+**프로그래밍 패러다임**
+- 함수형(Functional) 및 선언적(Declarative) 프로그래밍 패턴 우선 사용.
+- 모든 함수는 특정 상황에 국한되지 않고 확장 가능하도록 개발.
+
+**가독성 및 코드 스타일**
+- 가독성을 최우선 가치로 삼음.
+- 확립된 코딩 표준 (예: `PEP 8`) 준수.
+- 복잡한 표현식보다 명확하고 단순한 구문 선호.
+
+**설계 원칙**
+- 단순함 (`Simple is best`) 추구.
+- 단일 책임 원칙 (`Single Responsibility Principle`, SRP) 적용.
+- 코드 중복 제거 (`Don't Repeat Yourself`, DRY): 반복 (`iteration`) 및 모듈화 (`modularization`) 적극 활용.
+- 적절한 추상화: 복잡성 은닉과 코드 재사용 간 균형 유지, 과도한 추상화 지양.
+- 명확하고 단순한 인터페이스 설계.
+
+**견고성**
+- 철저한 예외 처리 (`Exception Handling`) 구현.
+- 경계 조건 (`Edge Cases`) 및 예상치 못한 입력 (`Unexpected Inputs`) 고려.
+- 방어적 프로그래밍 (`Defensive Programming`) 기법 적용.
+
+**테스트 용이성**
+- 작고 독립적인 함수 설계.
+- 부작용 (`Side Effects`) 최소화, 순수 함수 (`Pure Functions`) 지향.
+- 의존성 주입 (`Dependency Injection`) 활용 고려.
+
+**효율성**
+- 최적의 `Algorithm` 설계.
+- 상황에 맞는 적절한 `Data Structure` 선택.
+- 확장성 (`Scalability`) 및 유지보수성 (`Maintainability`) 고려.
+
+**의존성 관리**
+- 전역 상태 (`Global State`) 사용 제한.
+- 의존성 최소화.
+- 명시적인 매개변수 (`Explicit Parameters`) 전달 선호.
+
+**문서화**
+- 함수/모듈의 목적, `Parameters`, `Return Values` 명확히 기술.
+- 주석 (`Comments`): 코드의 '무엇'이 아닌 '왜'(구현 이유, 의도) 설명에 집중.
+- 복잡한 로직이나 `Algorithm` 상세 설명 포함.
+
+**디버깅**
+- `Debugging` 용이하도록 코드 작성.
+
+**컨테이너** 
+- 터미널 작업은 반드시 Docker 컨테이너 환경에서 작업 진행.
+  

@@ -1,28 +1,12 @@
 services:
   # Backend API Service
   backend:
-    build: .
+    build: ./backend
     container_name: remocon-backend
     ports:
       - '3000:3000'
-    environment:
-      # Binance API 설정
-      - BINANCE_API_KEY=${BINANCE_API_KEY:-}
-      - BINANCE_API_SECRET=${BINANCE_API_SECRET:-}
-
-      # 인증 토큰
-      - AUTH_TOKEN=${AUTH_TOKEN:-your-secret-token}
-
-      # 환경 설정
-      - USE_TESTNET=${USE_TESTNET:-true}
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8080}
-
-      # 허용 심볼 (쉼표로 구분)
-      - ALLOWED_SYMBOLS=${ALLOWED_SYMBOLS:-BTCUSDT,ETHUSDT,ADAUSDT,SOLUSDT,XRPUSDT}
-
-      # 로깅 레벨
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-
+    env_file:
+      - .env
     volumes:
       # 로그 파일 영속화
       - ./backend/log:/app/log

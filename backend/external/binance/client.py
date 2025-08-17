@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential_jitter
@@ -54,7 +54,7 @@ class BinanceFuturesClient:
     @retry(
         stop=stop_after_attempt(2), wait=wait_exponential_jitter(initial=0.1, max=0.6)
     )
-    async def get_exchange_info(self) -> Dict[str, Any]:
+    async def get_exchange_info(self) -> dict[str, Any]:
         resp = await self._client.get("/fapi/v1/exchangeInfo")
         resp.raise_for_status()
         return resp.json()
@@ -69,7 +69,7 @@ class BinanceFuturesClient:
         resp.raise_for_status()
         return resp.json()
 
-    async def set_leverage(self, symbol: str, leverage: int) -> Dict[str, Any]:
+    async def set_leverage(self, symbol: str, leverage: int) -> dict[str, Any]:
         return await self._signed_request(
             method="POST",
             path="/fapi/v1/leverage",
@@ -78,7 +78,7 @@ class BinanceFuturesClient:
 
     async def place_market_order(
         self, symbol: str, side: str, quantity: str, reduce_only: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return await self._signed_request(
             method="POST",
             path="/fapi/v1/order",
@@ -92,14 +92,14 @@ class BinanceFuturesClient:
         )
 
     async def get_position_risk(self, symbol: Optional[str] = None) -> Any:
-        params: Dict[str, Any] = {}
+        params: dict[str, Any] = {}
         if symbol:
             params["symbol"] = symbol
         return await self._signed_request("GET", "/fapi/v2/positionRisk", params=params)
 
     async def _signed_request(
-        self, method: str, path: str, params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, method: str, path: str, params: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         if not self.api_key or not self.api_secret:
             raise RuntimeError("API key/secret required for private endpoints")
 

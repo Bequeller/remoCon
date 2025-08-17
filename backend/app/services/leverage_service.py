@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Optional
 
 
 class LeverageManager:
@@ -8,7 +8,7 @@ class LeverageManager:
 
     def __init__(self, ttl_seconds: int = 300) -> None:
         self._ttl = ttl_seconds
-        self._cache: Dict[str, tuple[int, float]] = {}
+        self._cache: dict[str, tuple[int, float]] = {}
 
     def _is_fresh(self, symbol: str) -> bool:
         import time

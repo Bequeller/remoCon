@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import List, Optional
+from typing import Optional
 
 try:
     # Optional: load .env when present
@@ -24,6 +24,6 @@ USE_TESTNET: bool = _bool_env("USE_TESTNET", True)
 CORS_ORIGIN: str = os.getenv("CORS_ORIGIN", "http://localhost:3000")
 
 _allowed = os.getenv("ALLOWED_SYMBOLS", "BTCUSDT,ETHUSDT")
-ALLOWED_SYMBOLS: List[str] = [s.strip().upper() for s in _allowed.split(",") if s.strip()]
-
-
+ALLOWED_SYMBOLS: list[str] = [
+    s.strip().upper() for s in _allowed.split(",") if s.strip()
+]
