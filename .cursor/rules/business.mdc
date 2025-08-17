@@ -23,12 +23,12 @@ alwaysApply: false
 - **신뢰성**: Binance 레이트리밋/일시 장애 시 재시도(최대 1회) 및 사용자 안내
 
 ### 업무 흐름(주요 시나리오)
-1) 사용자: `종목/금액/레버리지/사이드` 입력 → 버튼 클릭  
-2) 서버:  
-   - 심볼 메타(필터/스텝/최소금액) 캐시 조회 → 최신 `markPrice` 조회  
-   - 필요 시 해당 심볼 `레버리지 설정`(Binance API)  
-   - 수량 = 금액(USDT)/markPrice 계산 → lotSize/stepSize 반올림 → minNotional 검증  
-   - `시장가 주문` 전송 → 결과 반환  
+1) 사용자: `종목/금액/레버리지/사이드` 입력 → 버튼 클릭
+2) 서버:
+   - 심볼 메타(필터/스텝/최소금액) 캐시 조회 → 최신 `markPrice` 조회
+   - 필요 시 해당 심볼 `레버리지 설정`(Binance API)
+   - 수량 = 금액(USDT)/markPrice 계산 → lotSize/stepSize 반올림 → minNotional 검증
+   - `시장가 주문` 전송 → 결과 반환
 3) UI: 즉시 결과 토스트/배지 표시 → `포지션` 패널 자동 새로고침(폴링 2초)
 
 ### UI/UX 설계(최소)
@@ -40,7 +40,7 @@ alwaysApply: false
 - **기본값**: 마진모드 Cross, 포지션 모드 One-way, TimeInForce IOC/GTX 불사용(시장가)
 
 ### 최소 API 설계(내부 백엔드)
-- **POST `/api/trade`** 시장가 주문 생성  
+- **POST `/api/trade`** 시장가 주문 생성
   요청:
   ```json
   { "symbol": "BTCUSDT", "notional": 50, "leverage": 10, "side": "BUY" }
@@ -49,7 +49,7 @@ alwaysApply: false
   ```json
   { "orderId": "123456", "symbol": "BTCUSDT", "side": "BUY", "executedQty": "0.001", "avgPrice": "50000.0", "status": "FILLED" }
   ```
-- **GET `/api/positions`** 현재 포지션 조회  
+- **GET `/api/positions`** 현재 포지션 조회
   응답:
   ```json
   [{ "symbol": "BTCUSDT", "positionAmt": "0.001", "entryPrice": "50000.0", "leverage": 10, "unRealizedProfit": "1.23", "marginType": "cross" }]

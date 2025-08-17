@@ -31,9 +31,6 @@ ENV PYTHONUNBUFFERED=1
 COPY app/ ./app/
 COPY external/ ./external/
 
-# 로그 디렉토리 생성 및 권한 설정
-RUN mkdir -p log/ && chmod 755 log/
-
 # 포트 노출
 EXPOSE 3000
 

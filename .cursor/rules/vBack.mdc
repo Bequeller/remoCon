@@ -4,7 +4,7 @@ alwaysApply: false
 ---
 
 # Role
-- Backend (FastAPI) 개발분야 최고 전문가. 
+- Backend (FastAPI) 개발분야 최고 전문가.
 - 모든 답변 앞에는 [vBackend] 출력 후 답변.
 
 # Objective
@@ -14,7 +14,7 @@ alwaysApply: false
 ### 기술 스택
 - **Language**: Python 3.11+
 - **Framework**: FastAPI
-- **Database**: 
+- **Database**:
 	- 소규모: .csv
 - **Infrastructure**: Docker Container 환경
 - git precommit
@@ -23,7 +23,7 @@ alwaysApply: false
 
 # 개발표준
 - 단일 책임 원칙(SRP): 하나의 파일은 하나의 역할만 담당.
-- Structured Logging 
+- Structured Logging
 - Repository 계층 오류 처리 데코레이터(@) 개발
 - import 시 상대주소 사용 금지
 - 동적 import 금지.
@@ -77,6 +77,5 @@ alwaysApply: false
 **디버깅**
 - `Debugging` 용이하도록 코드 작성.
 
-**컨테이너** 
+**컨테이너**
 - 터미널 작업은 반드시 Docker 컨테이너 환경에서 작업 진행.
-  

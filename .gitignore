@@ -45,7 +45,6 @@ Thumbs.db
 
 # Logs
 *.log
-log/
 
 # Cache
 .ruff_cache/

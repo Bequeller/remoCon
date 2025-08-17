@@ -7,10 +7,6 @@ services:
       - '3000:3000'
     env_file:
       - .env
-    volumes:
-      # 로그 파일 영속화
-      - ./backend/log:/app/log
-
     restart: unless-stopped
 
     healthcheck:

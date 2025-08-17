@@ -5,6 +5,9 @@ target-version = "py311"
 # 라인 길이 제한
 line-length = 88
 
+# 캐시 디렉토리 설정
+cache-dir = ".ruff_cache"
+
 # 제외할 파일/디렉토리
 exclude = [
     ".git",
@@ -14,6 +17,7 @@ exclude = [
     "dist",
     "*.egg-info",
     "log",
+    ".ruff_cache",
 ]
 
 [tool.ruff.lint]
