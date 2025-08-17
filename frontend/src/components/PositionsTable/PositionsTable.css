@@ -1,7 +1,7 @@
 /* intent: 포지션 테이블 React 컴포넌트 스타일 */
 
 .positions-section {
-  margin-bottom: var(--space-xl);
+  margin-bottom: 0;
 }
 
 .positions-table-wrapper {

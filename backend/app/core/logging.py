@@ -16,4 +16,10 @@ def setup_logger() -> logging.Logger:
     )
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
+    # FastAPI와 uvicorn 로그 레벨 조정
+    logging.getLogger("uvicorn").setLevel(logging.WARNING)
+    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+    logging.getLogger("fastapi").setLevel(logging.WARNING)
+
     return logger

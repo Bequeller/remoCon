@@ -1,22 +1,38 @@
 /* intent: Market Order React 컴포넌트 스타일 - 1단계 */
 
 .trade-section {
-  margin-bottom: var(--space-xl);
+  margin-bottom: 0;
 }
 
 /* 거래 파라미터 그리드 */
 .trade-params-grid {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
-  margin-bottom: var(--space-lg);
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
 }
 
 /* 파라미터 그룹 */
 .param-group {
   display: flex;
   flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* 파라미터 행 - 1행 2컬럼 레이아웃 */
+.param-row {
+  display: flex;
+  align-items: center;
   gap: var(--space-md);
+}
+
+.param-label-col {
+  flex: 0 0 auto;
+  min-width: 80px;
+}
+
+.param-input-col {
+  flex: 1;
 }
 
 .param-header {
@@ -45,12 +61,14 @@
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: var(--space-sm) var(--space-md);
-  transition: border-color var(--transition-fast);
+  padding: var(--space-sm) var(--space-lg);
+  transition: all var(--transition-fast);
+  min-height: 40px;
 }
 
 .param-input-group:focus-within {
   border-color: var(--binance-yellow);
+  box-shadow: 0 0 0 2px rgba(240, 185, 11, 0.2);
 }
 
 .param-input {
@@ -58,9 +76,12 @@
   background: transparent;
   border: none;
   color: var(--text);
-  font-size: var(--font-md);
+  font-size: var(--font-lg);
   font-weight: var(--font-medium);
   outline: none;
+  padding: 0;
+  width: 100%;
+  text-align: center;
 }
 
 .param-input::-webkit-outer-spin-button,
@@ -75,64 +96,61 @@
 
 .param-unit {
   color: var(--text-muted);
-  font-size: var(--font-sm);
+  font-size: var(--font-md);
   font-weight: var(--font-medium);
-  margin-left: var(--space-xs);
+  margin-left: var(--space-sm);
 }
 
-/* 슬라이더 */
-.slider-track {
-  position: relative;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.slider-progress {
-  height: 100%;
-  background: var(--binance-yellow);
-  border-radius: 2px;
-  transition: width var(--transition-fast);
-}
-
-.slider-marks {
+/* 레버리지 컨트롤 - 이미지 스타일 */
+.leverage-control {
   display: flex;
-  justify-content: space-between;
-  font-size: var(--font-xs);
-  color: var(--text-muted);
-  margin-top: var(--space-xs);
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
-/* 프리셋 버튼 */
-.param-presets {
-  display: flex;
-  gap: var(--space-xs);
-  flex-wrap: wrap;
+/* 위험도 애니메이션 */
+.leverage-warning,
+.size-warning {
+  border-color: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+  animation: warning-pulse 2s ease-in-out infinite;
 }
 
-.preset-btn {
-  padding: var(--space-xs) var(--space-sm);
-  border: 1px solid var(--border);
-  background: var(--bg-input);
-  color: var(--text-muted);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: var(--font-xs);
-  font-weight: var(--font-medium);
-  transition: all var(--transition-fast);
-  white-space: nowrap;
+.leverage-danger,
+.size-danger {
+  border-color: var(--sell);
+  box-shadow: 0 0 12px rgba(246, 70, 93, 0.5);
+  animation: danger-flicker 0.8s ease-in-out infinite;
 }
 
-.preset-btn:hover {
-  border-color: var(--binance-yellow);
-  color: var(--text);
+@keyframes warning-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.6);
+  }
 }
 
-.preset-btn.active {
-  background: var(--binance-yellow);
-  border-color: var(--binance-yellow);
-  color: var(--bg);
+@keyframes danger-flicker {
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(246, 70, 93, 0.5);
+    border-color: var(--sell);
+  }
+  25% {
+    box-shadow: 0 0 20px rgba(246, 70, 93, 0.8);
+    border-color: #ff4757;
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(246, 70, 93, 0.5);
+    border-color: var(--sell);
+  }
+  75% {
+    box-shadow: 0 0 20px rgba(246, 70, 93, 0.8);
+    border-color: #ff4757;
+  }
 }
 
 /* 거래 버튼 */
@@ -148,7 +166,7 @@
   padding: var(--space-md) var(--space-lg);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: var(--font-md);
+  font-size: var(--font-sm);
   font-weight: var(--font-semibold);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -187,15 +205,6 @@
 @media (max-width: 768px) {
   .trade-params-grid {
     gap: var(--space-md);
-  }
-
-  .param-presets {
-    gap: var(--space-xs);
-  }
-
-  .preset-btn {
-    padding: var(--space-xs);
-    font-size: var(--font-xs);
   }
 
   .row.actions {

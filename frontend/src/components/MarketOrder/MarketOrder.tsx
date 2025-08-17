@@ -7,23 +7,40 @@ interface MarketOrderProps {
 }
 
 export const MarketOrder: React.FC<MarketOrderProps> = ({ onTrade }) => {
-  const [size, setSize] = useState(100); // 기본값을 100 USDT로 변경
-  const [leverage, setLeverage] = useState(20);
+  const [size, setSize] = useState(100);
+  const [leverage, setLeverage] = useState(10);
 
   const handleSizeChange = (value: number) => {
-    setSize(Math.max(10, Math.min(10000, value))); // 범위를 10-10000 USDT로 변경
+    setSize(value);
   };
 
-  const handleSizePreset = (presetSize: number) => {
-    setSize(presetSize);
+  const handleLeverageChange = (value: number) => {
+    setLeverage(value);
+  };
+
+  // 레버리지 위험도에 따른 애니메이션 클래스 계산
+  const getLeverageAnimationClass = () => {
+    if (leverage >= 30) return 'leverage-danger';
+    if (leverage >= 15) return 'leverage-warning';
+    return '';
+  };
+
+  // 사이즈 위험도에 따른 애니메이션 클래스 계산
+  const getSizeAnimationClass = () => {
+    if (size >= 10000) return 'size-danger';
+    if (size >= 5000) return 'size-warning';
+    return '';
+  };
+
+  // 3자리마다 쉼표 포맷팅
+  const formatNumber = (num: number) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
   const handleTrade = (side: 'buy' | 'sell') => {
     onTrade?.(side, size, leverage);
     console.log(`${side.toUpperCase()} order:`, { size, leverage });
   };
-
-  const sizePresets = [50, 100, 500, 1000, 5000]; // USDT 기준 프리셋
 
   return (
     <div className="trade-section">
@@ -34,122 +51,68 @@ export const MarketOrder: React.FC<MarketOrderProps> = ({ onTrade }) => {
 
         {/* 거래 파라미터 그리드 */}
         <div className="trade-params-grid">
-          {/* Size 입력 - USDT 단위로 변경 */}
+          {/* Size 입력 */}
           <div className="param-group">
-            <div className="param-header">
-              <span className="param-label">Size</span>
-            </div>
-            <div className="param-control">
-              <div className="param-input-group">
-                <input
-                  type="number"
-                  min="10"
-                  max="10000"
-                  step="10"
-                  value={size}
-                  onChange={(e) => handleSizeChange(Number(e.target.value))}
-                  className="param-input"
-                  aria-label="Trade size in USDT"
-                />
-                <span className="param-unit">USDT</span>
+            <div className="param-row">
+              <div className="param-label-col">
+                <span className="param-label">Size</span>
               </div>
-              <div className="slider-track">
-                <div
-                  className="slider-progress"
-                  style={{ width: `${(size / 10000) * 100}%` }}
-                ></div>
+              <div className="param-input-col">
+                <div className={`param-input-group ${getSizeAnimationClass()}`}>
+                  <input
+                    type="text"
+                    value={size === 0 ? '' : formatNumber(size)}
+                    onChange={(e) => {
+                      if (e.target.value === '') {
+                        handleSizeChange(0);
+                      } else {
+                        const rawValue = e.target.value.replace(/,/g, '');
+                        const numValue = Number(rawValue);
+                        if (!isNaN(numValue) && numValue <= 1000000) {
+                          handleSizeChange(numValue);
+                        }
+                      }
+                    }}
+                    className="param-input"
+                    placeholder="Enter size"
+                    aria-label="Trade size in USDT"
+                  />
+                  <span className="param-unit">USDT</span>
+                </div>
               </div>
-              <div className="slider-marks">
-                <span>10</span>
-                <span>2.5K</span>
-                <span>5K</span>
-                <span>7.5K</span>
-                <span>10K</span>
-              </div>
-            </div>
-            <div className="param-presets">
-              {sizePresets.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  className={`preset-btn ${size === preset ? 'active' : ''}`}
-                  onClick={() => handleSizePreset(preset)}
-                >
-                  {preset >= 1000 ? `${preset / 1000}K` : preset}
-                </button>
-              ))}
             </div>
           </div>
 
-          {/* Leverage 입력 - 2단계에서 구현 예정 */}
+          {/* Leverage 입력 */}
           <div className="param-group">
-            <div className="param-header">
-              <span className="param-label">Leverage</span>
-            </div>
-            <div className="param-control">
-              <div className="param-input-group">
-                <input
-                  type="number"
-                  min="1"
-                  max="25"
-                  step="1"
-                  value={leverage}
-                  onChange={(e) => setLeverage(Number(e.target.value))}
-                  className="param-input"
-                  aria-label="Leverage multiplier"
-                />
-                <span className="param-unit">x</span>
+            <div className="param-row">
+              <div className="param-label-col">
+                <span className="param-label">Leverage</span>
               </div>
-              <div className="slider-track">
+              <div className="param-input-col">
                 <div
-                  className="slider-progress"
-                  style={{ width: `${(leverage / 25) * 100}%` }}
-                ></div>
+                  className={`param-input-group ${getLeverageAnimationClass()}`}
+                >
+                  <input
+                    type="text"
+                    value={leverage === 0 ? '' : leverage}
+                    onChange={(e) => {
+                      if (e.target.value === '') {
+                        handleLeverageChange(0);
+                      } else {
+                        const numValue = Number(e.target.value);
+                        if (!isNaN(numValue) && numValue <= 100) {
+                          handleLeverageChange(numValue);
+                        }
+                      }
+                    }}
+                    className="param-input"
+                    placeholder="Enter leverage"
+                    aria-label="Leverage value"
+                  />
+                  <span className="param-unit">x</span>
+                </div>
               </div>
-              <div className="slider-marks">
-                <span>1x</span>
-                <span>5x</span>
-                <span>10x</span>
-                <span>20x</span>
-                <span>25x</span>
-              </div>
-            </div>
-            <div className="param-presets">
-              <button
-                type="button"
-                className={`preset-btn ${leverage === 1 ? 'active' : ''}`}
-                onClick={() => setLeverage(1)}
-              >
-                1x
-              </button>
-              <button
-                type="button"
-                className={`preset-btn ${leverage === 5 ? 'active' : ''}`}
-                onClick={() => setLeverage(5)}
-              >
-                5x
-              </button>
-              <button
-                type="button"
-                className={`preset-btn ${leverage === 10 ? 'active' : ''}`}
-                onClick={() => setLeverage(10)}
-              >
-                10x
-              </button>
-              <button
-                type="button"
-                className={`preset-btn ${leverage === 20 ? 'active' : ''}`}
-                onClick={() => setLeverage(20)}
-              >
-                20x
-              </button>
-              <button
-                type="button"
-                className={`preset-btn ${leverage === 25 ? 'active' : ''}`}
-                onClick={() => setLeverage(25)}
-              >
-                25x
-              </button>
             </div>
           </div>
         </div>

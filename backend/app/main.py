@@ -6,7 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.endpoints import health, positions, symbols, trade
 from app.clients.binance_client import BinanceFuturesClient
 from app.core.config import CORS_ORIGIN, get_binance_config
+from app.core.logging import setup_logger
 from app.utils.middleware import access_log_middleware
+
+# 로깅 설정 초기화
+setup_logger()
 
 
 # intent: minimal FastAPI app with health check and static SPA mount

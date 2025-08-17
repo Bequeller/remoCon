@@ -41,11 +41,11 @@ class BinanceFuturesClient:
         )
         self._ts_offset_ms: int = 0
 
-        # 초기화 로깅
-        logger.info(
+        # 초기화 로깅 (로그 레벨 낮춤)
+        logger.debug(
             f"BinanceFuturesClient initialized: testnet={self.use_testnet}, base_url={self.base_url}"
         )
-        logger.info(
+        logger.debug(
             f"API Key present: {bool(self.api_key)}, API Secret present: {bool(self.api_secret)}"
         )
         if not self.api_key or not self.api_secret:
@@ -109,7 +109,7 @@ class BinanceFuturesClient:
         )
 
     async def get_position_risk(self, symbol: Optional[str] = None) -> Any:
-        logger.info(f"Getting position risk for symbol: {symbol or 'all'}")
+        logger.debug(f"Getting position risk for symbol: {symbol or 'all'}")
         params: dict[str, Any] = {}
         if symbol:
             params["symbol"] = symbol
@@ -117,7 +117,7 @@ class BinanceFuturesClient:
             result = await self._signed_request(
                 "GET", "/fapi/v2/positionRisk", params=params
             )
-            logger.info(
+            logger.debug(
                 f"Successfully retrieved position risk data: {len(result) if isinstance(result, list) else 'single item'}"
             )
             return result
@@ -127,10 +127,10 @@ class BinanceFuturesClient:
 
     async def get_account_info(self) -> dict[str, Any]:
         """계좌 정보 조회 (API 키 검증용)"""
-        logger.info("Getting account information")
+        logger.debug("Getting account information")
         try:
             result = await self._signed_request("GET", "/fapi/v2/account")
-            logger.info("Successfully retrieved account information")
+            logger.debug("Successfully retrieved account information")
             return result
         except Exception as e:
             logger.error(f"Failed to get account info: {str(e)}")
@@ -138,10 +138,10 @@ class BinanceFuturesClient:
 
     async def get_balance(self) -> list[dict[str, Any]]:
         """Futures 잔고 정보 조회"""
-        logger.info("Getting futures balance information")
+        logger.debug("Getting futures balance information")
         try:
             result = await self._signed_request("GET", "/fapi/v2/balance")
-            logger.info(
+            logger.debug(
                 f"Successfully retrieved balance data: {len(result) if isinstance(result, list) else 'single item'}"
             )
             return result
@@ -152,7 +152,7 @@ class BinanceFuturesClient:
     async def _signed_request(
         self, method: str, path: str, params: Optional[dict[str, Any]] = None
     ) -> dict[str, Any]:
-        logger.info(f"Making signed request: {method} {path}")
+        logger.debug(f"Making signed request: {method} {path}")
 
         if not self.api_key or not self.api_secret:
             logger.error("API key/secret required for private endpoints")
@@ -162,7 +162,7 @@ class BinanceFuturesClient:
             raise RuntimeError("API key/secret required for private endpoints")
 
         if self._ts_offset_ms == 0:
-            logger.info("Syncing time with Binance server")
+            logger.debug("Syncing time with Binance server")
             await self.sync_time()
 
         params = params.copy() if params else {}
@@ -174,8 +174,8 @@ class BinanceFuturesClient:
         headers = {"X-MBX-APIKEY": self.api_key}
         req_kwargs = {"headers": headers}
 
-        logger.info(f"Request details: method={method}, path={path}, params={params}")
-        logger.info(f"Signature generated: {signature[:10]}...")
+        logger.debug(f"Request details: method={method}, path={path}, params={params}")
+        logger.debug(f"Signature generated: {signature[:10]}...")
 
         try:
             if method.upper() == "GET":
@@ -187,10 +187,10 @@ class BinanceFuturesClient:
                     path, params={**params, "signature": signature}, **req_kwargs
                 )
 
-            logger.info(f"Response status: {resp.status_code}")
+            logger.debug(f"Response status: {resp.status_code}")
             resp.raise_for_status()
             result = resp.json()
-            logger.info(f"Response data type: {type(result)}")
+            logger.debug(f"Response data type: {type(result)}")
             return result
 
         except httpx.HTTPStatusError as e:

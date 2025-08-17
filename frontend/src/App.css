@@ -7,7 +7,7 @@
 }
 
 .App-main {
-  padding: var(--space-xs);
+  padding: 0;
 }
 
 .container {
@@ -15,20 +15,19 @@
   margin: 0 auto;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-xs);
+  padding: 0;
   box-shadow: var(--shadow-toast);
   overflow: visible;
 }
 
 .symbol-section {
-  margin-bottom: var(--space-sm);
+  margin-bottom: 0;
 }
 
 .market-order-section {
-  margin-bottom: var(--space-sm);
+  margin-bottom: 0;
 }
 
 .positions-section {
-  margin-bottom: var(--space-xs);
+  margin-bottom: 0;
 }

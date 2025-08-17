@@ -65,8 +65,8 @@ export const Header = () => {
 
   useEffect(() => {
     fetchHealthStatus();
-    // 30초마다 헬스체크 업데이트
-    const interval = setInterval(fetchHealthStatus, 30000);
+    // 2분마다 헬스체크 업데이트 (로그 부하 감소)
+    const interval = setInterval(fetchHealthStatus, 120000);
     return () => clearInterval(interval);
   }, []);
 
@@ -88,7 +88,7 @@ export const Header = () => {
         </div>
 
         <div className="header-right">
-          <div className="health-status">
+          <div className="health-item">
             <div
               className="health-indicator"
               style={{
@@ -97,10 +97,9 @@ export const Header = () => {
                 ),
               }}
             />
-            <span className="health-text">Backend</span>
+            <span className="health-label">Backend</span>
           </div>
-
-          <div className="health-status">
+          <div className="health-item">
             <div
               className="health-indicator"
               style={{
@@ -109,10 +108,9 @@ export const Header = () => {
                 ),
               }}
             />
-            <span className="health-text">Binance</span>
+            <span className="health-label">Binance</span>
           </div>
-
-          <div className="health-status">
+          <div className="health-item">
             <div
               className="health-indicator"
               style={{
@@ -121,7 +119,7 @@ export const Header = () => {
                 ),
               }}
             />
-            <span className="health-text">API Key</span>
+            <span className="health-label">API Key</span>
           </div>
         </div>
       </div>
