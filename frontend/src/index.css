@@ -71,11 +71,11 @@ code {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: var(--space-md);
+  padding: var(--space-sm);
 }
 
 .panel-header {
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
 }
 
 .tab {
@@ -89,8 +89,8 @@ code {
 .row {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-md);
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
 }
 
 .row:last-child {

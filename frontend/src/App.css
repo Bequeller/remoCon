@@ -6,46 +6,8 @@
   color: var(--text);
 }
 
-.App-header {
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  padding: var(--space-sm);
-}
-
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.binance-logo {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-}
-
-.header-text {
-  text-align: center;
-}
-
-.App-header h1 {
-  font-size: var(--font-xl);
-  font-weight: var(--font-semibold);
-  margin-bottom: var(--space-sm);
-  color: var(--binance-yellow);
-}
-
-.App-header p {
-  color: var(--text-muted);
-  font-size: var(--font-sm);
-}
-
 .App-main {
-  padding: var(--space-sm);
+  padding: var(--space-xs);
 }
 
 .container {
@@ -54,10 +16,18 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: var(--space-sm);
+  padding: var(--space-xs);
   box-shadow: var(--shadow-toast);
 }
 
 .symbol-section {
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-sm);
+}
+
+.market-order-section {
+  margin-bottom: var(--space-sm);
+}
+
+.positions-section {
+  margin-bottom: var(--space-xs);
 }

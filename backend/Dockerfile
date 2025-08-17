@@ -36,7 +36,7 @@ EXPOSE 3000
 
 # 헬스체크
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/healthz || exit 1
+    CMD python -c "import httpx; import asyncio; import sys; response = asyncio.run(httpx.AsyncClient().get('http://localhost:3000/healthz')); sys.exit(0 if response.status_code == 200 else 1)"
 
 # 애플리케이션 실행
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3000"]

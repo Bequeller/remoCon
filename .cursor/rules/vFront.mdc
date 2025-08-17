@@ -1,5 +1,5 @@
 ---
-globs: *.ts,*.css,*.html
+globs: *.ts,*.tsx,*.css,*.html
 alwaysApply: false
 ---
 최우선 순위

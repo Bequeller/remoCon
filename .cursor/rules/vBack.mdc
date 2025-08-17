@@ -1,5 +1,5 @@
 ---
-glob:
+glob: *.py
 alwaysApply: false
 ---
 

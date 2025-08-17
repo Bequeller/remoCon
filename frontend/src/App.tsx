@@ -1,5 +1,6 @@
 // intent: 메인 앱 컴포넌트 - 컴포넌트 테스트
 import { useState } from 'react';
+import { Header } from './components/Header';
 import { SymbolSelector } from './components/SymbolSelector/SymbolSelector';
 import { MarketOrder } from './components/MarketOrder/MarketOrder';
 import { PositionsTable } from './components/PositionsTable/PositionsTable';
@@ -29,14 +30,7 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <div className="header-content">
-          <img src="/binance-logo.svg" alt="Binance" className="binance-logo" />
-          <div className="header-text">
-            <h1>RemoCon</h1>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="App-main">
         <div className="container">
@@ -54,9 +48,13 @@ function App() {
             </div>
           </section>
 
-          <MarketOrder onTrade={handleTrade} />
+          <section className="market-order-section">
+            <MarketOrder onTrade={handleTrade} />
+          </section>
 
-          <PositionsTable onPositionClose={handlePositionClose} />
+          <section className="positions-section">
+            <PositionsTable onPositionClose={handlePositionClose} />
+          </section>
         </div>
       </main>
     </div>
