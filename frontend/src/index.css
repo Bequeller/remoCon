@@ -72,6 +72,7 @@ code {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: var(--space-sm);
+  overflow: visible;
 }
 
 .panel-header {

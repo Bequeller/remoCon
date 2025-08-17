@@ -34,8 +34,13 @@ services:
   frontend:
     build:
       context: ./frontend
-      target: production
+      target: development
     container_name: remocon-frontend
     ports:
       - '8080:3000'
     restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development

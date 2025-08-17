@@ -23,9 +23,14 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   const [symbols, setSymbols] = useState<Symbol[]>([]);
   const [filteredSymbols, setFilteredSymbols] = useState<Symbol[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   // 초기 심볼 데이터 로드
   useEffect(() => {
@@ -68,6 +73,30 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     [onSymbolChange]
   );
 
+  const calculateDropdownPosition = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const dropdownHeight = 300; // max-height
+
+      let top: number;
+      if (spaceBelow >= dropdownHeight || spaceBelow > spaceAbove) {
+        // 아래쪽에 공간이 충분하거나 위쪽보다 아래쪽이 더 넓을 때
+        top = rect.bottom + 4;
+      } else {
+        // 위쪽에 배치
+        top = rect.top - dropdownHeight - 4;
+      }
+
+      setDropdownPosition({
+        top,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, []);
+
   // 드롭다운 외부 클릭 감지
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -83,10 +112,26 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // 키보드 네비게이션
+  // 키보드 네비게이션 및 스크롤 감지
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isOpen) return;
+
+      // 검색 기능: 알파벳/숫자 입력 시 검색어에 추가
+      if (event.key.length === 1 && /[a-zA-Z0-9]/.test(event.key)) {
+        event.preventDefault();
+        setSearchTerm((prev) => prev + event.key.toUpperCase());
+        setSelectedIndex(-1);
+        return;
+      }
+
+      // 백스페이스: 검색어에서 마지막 문자 제거
+      if (event.key === 'Backspace') {
+        event.preventDefault();
+        setSearchTerm((prev) => prev.slice(0, -1));
+        setSelectedIndex(-1);
+        return;
+      }
 
       switch (event.key) {
         case 'ArrowDown':
@@ -105,29 +150,60 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
           event.preventDefault();
           if (selectedIndex >= 0 && filteredSymbols[selectedIndex]) {
             handleSymbolSelect(filteredSymbols[selectedIndex].symbol);
+          } else if (filteredSymbols.length === 1) {
+            // 검색 결과가 하나뿐이면 자동 선택
+            handleSymbolSelect(filteredSymbols[0].symbol);
           }
           break;
         case 'Escape':
           setIsOpen(false);
+          setSearchTerm('');
           break;
       }
     };
 
+    const handleScroll = () => {
+      if (isOpen) {
+        calculateDropdownPosition();
+      }
+    };
+
+    const handleResize = () => {
+      if (isOpen) {
+        calculateDropdownPosition();
+      }
+    };
+
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, selectedIndex, filteredSymbols, handleSymbolSelect]);
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [
+    isOpen,
+    selectedIndex,
+    filteredSymbols,
+    handleSymbolSelect,
+    calculateDropdownPosition,
+  ]);
 
   const toggleDropdown = () => {
-    setIsOpen(!isOpen);
     if (!isOpen) {
-      setTimeout(() => searchInputRef.current?.focus(), 100);
+      calculateDropdownPosition();
+      setSearchTerm('');
     }
+    setIsOpen(!isOpen);
   };
 
   return (
     <div className="symbol-selector-wrapper">
       <div className="symbol-selector" ref={dropdownRef}>
         <button
+          ref={buttonRef}
           type="button"
           className="symbol-selector-btn"
           onClick={toggleDropdown}
@@ -137,28 +213,26 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
         </button>
 
         {isOpen && (
-          <div className="symbol-dropdown open">
-            <div className="symbol-search-wrapper">
-              <input
-                ref={searchInputRef}
-                type="text"
-                className="symbol-search"
-                placeholder="심볼 검색 (예: BTC, ETH)"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="symbol-categories">
-              <button type="button" className="category-btn active">
-                USDT
-              </button>
-            </div>
-
+          <div
+            className="symbol-dropdown open"
+            style={{
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width}px`,
+            }}
+          >
+            {searchTerm && (
+              <div className="search-indicator">
+                <span className="search-text">검색: {searchTerm}</span>
+              </div>
+            )}
             <div className="symbol-list">
               {filteredSymbols.length === 0 ? (
-                <div className="no-symbols">검색 결과가 없습니다</div>
+                <div className="no-symbols">
+                  {searchTerm
+                    ? `"${searchTerm}" 검색 결과가 없습니다`
+                    : '심볼을 선택하세요'}
+                </div>
               ) : (
                 filteredSymbols.map((symbol, index) => (
                   <div
