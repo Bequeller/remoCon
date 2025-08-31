@@ -11,7 +11,7 @@ from app.core.config import BINANCE_API_KEY, BINANCE_SECRET_KEY, BINANCE_TESTNET
 
 # 로거 설정
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)  # DEBUG 로그 제거
+logger.setLevel(logging.DEBUG)  # DEBUG 로그 활성화하여 API 문제 디버깅
 
 
 class BinanceFuturesClient:
@@ -42,15 +42,43 @@ class BinanceFuturesClient:
         )
         self._ts_offset_ms: int = 0
 
-        # 초기화 로깅 (로그 레벨 낮춤)
+        # 초기화 로깅 및 API 키 검증
         logger.debug(
             f"BinanceFuturesClient initialized: testnet={self.use_testnet}, base_url={self.base_url}"
         )
-        logger.debug(
-            f"API Key present: {bool(self.api_key)}, API Secret present: {bool(self.api_secret)}"
-        )
+
+        # API 키 포맷 검증 및 로깅
+        if self.api_key:
+            logger.debug(f"API Key length: {len(self.api_key)}")
+            logger.debug(f"API Key prefix: {self.api_key[:8]}...")
+            # Binance API 키는 대소문자 알파벳과 숫자 포함 가능
+            valid_chars = set(
+                "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            )
+            logger.debug(
+                f"API Key format: {'Valid' if all(c in valid_chars for c in self.api_key) else 'Invalid'}"
+            )
+        else:
+            logger.warning("API Key is missing")
+
+        if self.api_secret:
+            logger.debug(f"API Secret length: {len(self.api_secret)}")
+            logger.debug(f"API Secret prefix: {self.api_secret[:8]}...")
+            # API Secret도 동일한 검증
+            valid_chars = set(
+                "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            )
+            logger.debug(
+                f"API Secret format: {'Valid' if all(c in valid_chars for c in self.api_secret) else 'Invalid'}"
+            )
+        else:
+            logger.warning("API Secret is missing")
+
         if not self.api_key or not self.api_secret:
             logger.warning("API key or secret is missing - private endpoints will fail")
+            logger.warning(
+                f"API Key present: {bool(self.api_key)}, API Secret present: {bool(self.api_secret)}"
+            )
 
     async def close(self) -> None:
         await self._client.aclose()
@@ -60,11 +88,23 @@ class BinanceFuturesClient:
     )
     async def sync_time(self) -> None:
         """Update local timestamp offset against Binance server time."""
+        local_ms_before = int(time.time() * 1000)
+        logger.debug(f"Syncing time - Local time before: {local_ms_before}")
+
         resp = await self._client.get("/fapi/v1/time")
         resp.raise_for_status()
         server_ms = int(resp.json()["serverTime"])
-        local_ms = int(time.time() * 1000)
-        self._ts_offset_ms = server_ms - local_ms
+
+        local_ms_after = int(time.time() * 1000)
+        self._ts_offset_ms = server_ms - local_ms_after
+
+        logger.debug(f"Server time: {server_ms}")
+        logger.debug(f"Local time after: {local_ms_after}")
+        logger.debug(f"Time offset: {self._ts_offset_ms}ms")
+        logger.debug(f"Time difference: {abs(server_ms - local_ms_after)}ms")
+
+        if abs(self._ts_offset_ms) > 1000:  # 1초 이상 차이
+            logger.warning(f"Large time offset detected: {self._ts_offset_ms}ms")
 
     def _now_ms(self) -> int:
         return int(time.time() * 1000) + self._ts_offset_ms
@@ -169,29 +209,49 @@ class BinanceFuturesClient:
         params = params.copy() if params else {}
         params["timestamp"] = self._now_ms()
         query = str(httpx.QueryParams(params))
+
+        # 서명 생성 과정 상세 로깅
+        logger.debug(f"Original params: {params}")
+        logger.debug(f"Query string: {query}")
+        logger.debug(f"API Secret length: {len(self.api_secret)}")
+        logger.debug(f"API Secret prefix: {self.api_secret[:8]}...")
+
         signature = hmac.new(
             self.api_secret.encode(), query.encode(), hashlib.sha256
         ).hexdigest()
+
         headers = {"X-MBX-APIKEY": self.api_key}
         req_kwargs = {"headers": headers}
 
+        logger.debug(f"Generated signature: {signature}")
+        logger.debug(f"Signature length: {len(signature)}")
         logger.debug(f"Request details: method={method}, path={path}, params={params}")
-        logger.debug(f"Signature generated: {signature[:10]}...")
+        logger.debug(f"Headers: {headers}")
 
         try:
+            # 최종 요청 파라미터 로깅
+            final_params = {**params, "signature": signature}
+            logger.debug(f"Final request URL: {self.base_url}{path}")
+            logger.debug(f"Final request params: {final_params}")
+            logger.debug(f"Request method: {method}")
+
             if method.upper() == "GET":
-                resp = await self._client.get(
-                    path, params={**params, "signature": signature}, **req_kwargs
-                )
+                resp = await self._client.get(path, params=final_params, **req_kwargs)
             else:
-                resp = await self._client.post(
-                    path, params={**params, "signature": signature}, **req_kwargs
-                )
+                resp = await self._client.post(path, params=final_params, **req_kwargs)
 
             logger.debug(f"Response status: {resp.status_code}")
+            logger.debug(f"Response headers: {dict(resp.headers)}")
+
+            if resp.status_code >= 400:
+                logger.error(f"HTTP Error {resp.status_code}: {resp.text}")
+
             resp.raise_for_status()
             result = resp.json()
             logger.debug(f"Response data type: {type(result)}")
+            logger.debug(
+                f"Response data keys: {list(result.keys()) if isinstance(result, dict) else 'Not a dict'}"
+            )
             return result
 
         except httpx.HTTPStatusError as e:
