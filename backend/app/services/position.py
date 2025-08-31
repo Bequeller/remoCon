@@ -90,7 +90,9 @@ class PositionService:
             logger.error(f"Failed to save position close to CSV: {e}")
             # CSV 저장 실패해도 청산은 계속 진행
 
-    async def get_positions(self, symbol: Optional[str] = None) -> list[Position]:
+    async def get_positions(
+        self, symbol: Optional[str] = None, bypass_cache: bool = False
+    ) -> list[Position]:
         """
         현재 활성 포지션 정보를 조회합니다.
 
@@ -102,12 +104,24 @@ class PositionService:
         """
         # 캐시 키 생성
         cache_key = f"positions_{symbol or 'all'}"
+        logger.info(
+            f"Checking cache for key: {cache_key}, bypass_cache: {bypass_cache}"
+        )
 
-        # 캐시 확인
-        if cache_key in self._position_cache:
-            cached_data, timestamp = self._position_cache[cache_key]
-            if self._is_cache_valid(timestamp):
-                return cached_data
+        # 캐시 우회 옵션이 있으면 캐시를 사용하지 않음
+        if not bypass_cache:
+            # 캐시 확인
+            if cache_key in self._position_cache:
+                cached_data, timestamp = self._position_cache[cache_key]
+                if self._is_cache_valid(timestamp):
+                    logger.info(
+                        f"Returning cached data for {cache_key}, age: {time.time() - timestamp:.1f}s"
+                    )
+                    return cached_data
+                else:
+                    logger.info(
+                        f"Cache expired for {cache_key}, age: {time.time() - timestamp:.1f}s"
+                    )
 
         # 바이낸스 API 호출
         client = BinanceFuturesClient()
@@ -143,6 +157,7 @@ class PositionService:
 
         # 캐시 업데이트
         self._position_cache[cache_key] = (results, time.time())
+        logger.info(f"Cache updated for {cache_key} with {len(results)} positions")
 
         return results
 
@@ -163,6 +178,7 @@ class PositionService:
             RuntimeError: API 호출 실패 시
         """
         # 청산 시도 상태를 CSV에 기록
+        logger.info(f"Starting position close attempt for {symbol} by user {user}")
         attempt_close_data = {
             "symbol": symbol,
             "side": "CLOSE",  # 청산 작업임을 표시
@@ -232,6 +248,9 @@ class PositionService:
             )
 
             # 청산 성공 상태를 CSV에 기록
+            logger.info(
+                f"Position close completed successfully for {symbol} by user {user}"
+            )
             success_close_data = {
                 **result,  # 바이낸스 API 응답 데이터 포함 (먼저 추가해서 덮어쓰기 방지)
                 "symbol": symbol,
@@ -246,9 +265,14 @@ class PositionService:
             self._save_trade_to_csv(success_close_data)
 
             # 캐시 무효화 (포지션 정보 갱신 필요)
-            cache_key = f"positions_{symbol}"
-            if cache_key in self._position_cache:
-                del self._position_cache[cache_key]
+            # 특정 심볼과 전체 포지션 캐시 모두 무효화
+            cache_keys_to_delete = [f"positions_{symbol}", "positions_all"]
+            for cache_key in cache_keys_to_delete:
+                if cache_key in self._position_cache:
+                    del self._position_cache[cache_key]
+                    logger.info(
+                        f"Cache invalidated for {cache_key} after position close"
+                    )
 
             return result
 

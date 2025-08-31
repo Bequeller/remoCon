@@ -28,13 +28,33 @@ interface Position {
 export const apiCall = async <T>(endpoint: string): Promise<T> => {
   try {
     const url = `${API_CONFIG.baseURL}${endpoint}`;
-    const response = await fetch(url);
+    console.log(`Making API call to: ${url}`);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log(`API response status: ${response.status}`);
+    console.log(`API response headers:`, Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`API error response:`, errorText);
+      throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
     }
-    return await response.json();
+
+    const data = await response.json();
+    console.log(`API response data:`, data);
+    return data;
   } catch (error) {
     console.error(`Failed to fetch ${endpoint}:`, error);
+    console.error(`Error details:`, {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     throw error;
   }
 };
@@ -49,8 +69,11 @@ export const symbolsAPI = {
 
 // 포지션 관련 API 함수들
 export const positionsAPI = {
-  fetchPositions: async (): Promise<Position[]> => {
-    const data = await apiCall<Position[]>(API_CONFIG.endpoints.positions);
+  fetchPositions: async (bypassCache: boolean = false): Promise<Position[]> => {
+    const url = bypassCache
+      ? `${API_CONFIG.endpoints.positions}?bypass_cache=true`
+      : API_CONFIG.endpoints.positions;
+    const data = await apiCall<Position[]>(url);
     return data || [];
   },
 

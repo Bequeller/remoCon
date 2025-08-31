@@ -44,7 +44,6 @@ export const PositionsTable = forwardRef<
 
   // 외부에서 제공된 positions 또는 내부 positions 사용
   const positions = externalPositions ?? internalPositions;
-  const setPositions = externalPositions ? () => {} : setInternalPositions;
   const [error, setError] = useState<string | null>(null);
   const [closingPositions, setClosingPositions] = useState<Set<string>>(
     new Set()
@@ -53,49 +52,50 @@ export const PositionsTable = forwardRef<
   const [healthCheckError, setHealthCheckError] = useState<string | null>(null);
   const [isRetryingHealthCheck, setIsRetryingHealthCheck] = useState(false);
 
-  // 헬스체크 수행
-  const performHealthCheck = useCallback(async (): Promise<boolean> => {
-    try {
-      const apiKeyHealth = await healthCheckService.getApiKeyHealthStatus();
-      if (apiKeyHealth) {
-        setIsApiKeyValid(apiKeyHealth.details.is_valid);
-        setHealthCheckError(null);
-        return apiKeyHealth.details.is_valid;
-      }
-      setIsApiKeyValid(false);
-      setHealthCheckError('Unable to check API key status');
-      return false;
-    } catch {
-      setIsApiKeyValid(false);
-      setHealthCheckError('API key validation failed');
-
-      // 헬스체크 실패 알람 표시
-      if (onAddAlert) {
-        onAddAlert(
-          'error',
-          'API 키 검증 실패',
-          'Binance API 키 검증에 실패했습니다. 설정을 확인해주세요.',
-          7000
-        );
-      }
-
-      return false;
-    }
-  }, [onAddAlert]);
-
   // refreshPositions 함수 - 외부에서 호출 가능
   const refreshPositions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // 백엔드 API에서 포지션 데이터 가져오기
-      const positionsData = await positionsAPI.fetchPositions();
+      console.log('Starting position refresh...');
+
+      // 백엔드 API에서 포지션 데이터 가져오기 (캐시 우회)
+      const positionsData = await positionsAPI.fetchPositions(true);
+      console.log(
+        'Raw positions data from API (cache bypassed):',
+        positionsData
+      );
+      console.log('Positions data type:', typeof positionsData);
+      console.log('Is array:', Array.isArray(positionsData));
+
+      // 데이터 검증 강화
+      if (!Array.isArray(positionsData)) {
+        console.error('Invalid data format received:', positionsData);
+        throw new Error('API returned invalid data format');
+      }
+
       setInternalPositions(positionsData);
 
-      console.log('Positions refreshed:', positionsData);
+      console.log('Positions refreshed successfully:', positionsData);
+      console.log('Number of positions:', positionsData.length);
+
+      // 성공 시 알람 표시
+      if (onAddAlert) {
+        onAddAlert(
+          'success',
+          '포지션 새로고침 성공',
+          `${positionsData.length}개의 포지션이 로드되었습니다.`,
+          3000
+        );
+      }
     } catch (err) {
       console.error('Failed to refresh positions:', err);
+      console.error('Error details:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : undefined,
+      });
+
       const errorMessage = 'Failed to refresh positions. Please try again.';
       setError(errorMessage);
 
@@ -104,7 +104,9 @@ export const PositionsTable = forwardRef<
         onAddAlert(
           'error',
           '포지션 새로고침 실패',
-          '포지션 데이터를 새로고침하는데 실패했습니다.',
+          `포지션 데이터를 새로고침하는데 실패했습니다: ${
+            err instanceof Error ? err.message : '알 수 없는 오류'
+          }`,
           5000
         );
       }
@@ -215,6 +217,7 @@ export const PositionsTable = forwardRef<
   useEffect(() => {
     // 외부에서 positions를 제공받았으면 로딩하지 않음
     if (externalPositions) {
+      console.log('Using external positions data:', externalPositions);
       setLoading(false);
       return;
     }
@@ -224,11 +227,31 @@ export const PositionsTable = forwardRef<
         setLoading(true);
         setError(null);
 
+        console.log('Loading positions from API...');
+
         // 백엔드 API에서 포지션 데이터 가져오기
         const positionsData = await positionsAPI.fetchPositions();
+        console.log('Raw positions data from API:', positionsData);
+        console.log('Positions data type:', typeof positionsData);
+        console.log('Positions data is array:', Array.isArray(positionsData));
+
+        // 데이터 검증
+        if (!Array.isArray(positionsData)) {
+          console.error('Positions data is not an array:', positionsData);
+          throw new Error('Invalid positions data format');
+        }
+
+        console.log('Initial positions data loaded:', positionsData);
+        console.log('Initial positions count:', positionsData.length);
+
         setInternalPositions(positionsData);
       } catch (err) {
         console.error('Failed to load positions:', err);
+        console.error('Load positions error details:', {
+          message: err instanceof Error ? err.message : 'Unknown error',
+          stack: err instanceof Error ? err.stack : undefined,
+        });
+
         const errorMessage = 'Failed to load positions. Please try again.';
         setError(errorMessage);
 
@@ -237,7 +260,9 @@ export const PositionsTable = forwardRef<
           onAddAlert(
             'error',
             '포지션 로드 실패',
-            '포지션 데이터를 불러오는데 실패했습니다.',
+            `포지션 데이터를 불러오는데 실패했습니다: ${
+              err instanceof Error ? err.message : '알 수 없는 오류'
+            }`,
             5000
           );
         }
@@ -248,26 +273,31 @@ export const PositionsTable = forwardRef<
       }
     };
 
+    // 간단한 초기 로드 (헬스체크 없이 바로 포지션 로드)
     const initializeComponent = async () => {
-      const isHealthy = await performHealthCheck();
-      if (isHealthy) {
+      console.log('Initializing PositionsTable component...');
+      try {
         await loadPositions();
+      } catch (err) {
+        console.error('Failed to initialize positions:', err);
+        setLoading(false);
       }
     };
 
-    // 초기 로드 (헬스체크 먼저 수행)
+    // 초기 로드
     initializeComponent();
 
-    // 헬스체크는 30초마다, 포지션은 API Key 유효할 때만 60초마다
-    const healthInterval = setInterval(async () => {
-      const isHealthy = await performHealthCheck();
-      if (isHealthy) {
+    // 30초마다 포지션 새로고침
+    const refreshInterval = setInterval(async () => {
+      try {
         await loadPositions();
+      } catch (err) {
+        console.error('Failed to refresh positions:', err);
       }
     }, 30000);
 
-    return () => clearInterval(healthInterval);
-  }, [performHealthCheck, onAddAlert, externalPositions]);
+    return () => clearInterval(refreshInterval);
+  }, [onAddAlert, externalPositions]);
 
   const handleClosePosition = async (symbol: string) => {
     // 이미 청산 중인 경우 중복 요청 방지
@@ -294,8 +324,8 @@ export const PositionsTable = forwardRef<
         );
       }
 
-      // 성공 시 포지션 목록에서 제거
-      setPositions((prev) => prev.filter((pos) => pos.symbol !== symbol));
+      // 성공 시 포지션 목록 새로고침 (캐시된 데이터가 아닌 최신 데이터 가져오기)
+      await refreshPositions();
 
       // 부모 컴포넌트에 알림 (있는 경우)
       if (onPositionClose) {
@@ -411,6 +441,24 @@ export const PositionsTable = forwardRef<
         </div>
 
         <div className="positions-table-wrapper">
+          {/* 수동 새로고침 버튼 */}
+          <div style={{ padding: '10px', textAlign: 'right' }}>
+            <button
+              onClick={refreshPositions}
+              disabled={loading}
+              style={{
+                padding: '5px 10px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loading ? 'Loading...' : '🔄 Refresh Positions'}
+            </button>
+          </div>
+
           {positions.length === 0 ? (
             <div className="positions-empty">
               <div className="positions-empty-icon">📊</div>

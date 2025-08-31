@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 
 from app.services.position import position_service
 from app.utils.errors import error_response
@@ -64,7 +64,9 @@ async def close_position(request: Request, symbol: str, user: str = "unknown"):
     summary="Get current trading positions",
     description="Retrieve all active futures positions with caching for performance",
 )
-async def get_positions(request: Request, symbol: Optional[str] = None):
+async def get_positions(
+    request: Request, symbol: Optional[str] = None, bypass_cache: bool = Query(False)
+):
     """
     현재 활성 포지션 정보를 조회합니다.
 
@@ -76,7 +78,9 @@ async def get_positions(request: Request, symbol: Optional[str] = None):
         활성 포지션 목록 또는 에러 응답
     """
     try:
-        positions = await position_service.get_positions(symbol=symbol)
+        positions = await position_service.get_positions(
+            symbol=symbol, bypass_cache=bypass_cache
+        )
         return positions
 
     except RuntimeError:

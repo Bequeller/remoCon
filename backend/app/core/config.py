@@ -73,7 +73,7 @@ LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 # =============================================================================
 # Cache Configuration
 # =============================================================================
-POSITION_CACHE_TTL: int = _int_env("POSITION_CACHE_TTL", 5)  # 5초
+POSITION_CACHE_TTL: int = _int_env("POSITION_CACHE_TTL", 30)  # 30초
 
 
 # =============================================================================
