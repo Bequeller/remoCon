@@ -1,9 +1,10 @@
 // intent: 메인 앱 컴포넌트 - 컴포넌트 테스트 및 알람 시스템
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Header } from './components/Header';
 import { SymbolSelector } from './components/SymbolSelector/SymbolSelector';
 import { MarketOrder } from './components/MarketOrder/MarketOrder';
 import { PositionsTable } from './components/PositionsTable/PositionsTable';
+import type { PositionsTableRef } from './components/PositionsTable/PositionsTable';
 import { AlertContainer } from './components/Alert';
 import type { AlertMessage, AlertType } from './components/Alert';
 import { tradeAPI } from './utils/api';
@@ -12,6 +13,7 @@ import './App.css';
 function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT');
   const [alerts, setAlerts] = useState<AlertMessage[]>([]);
+  const positionsTableRef = useRef<PositionsTableRef>(null);
 
   // 알람 추가 함수
   const addAlert = useCallback(
@@ -82,7 +84,15 @@ function App() {
         5000
       );
 
-      // 포지션 목록 새로고침 등의 후속 조치
+      // 매수/매도 성공 후 2초 뒤에 포지션 정보 새로고침
+      setTimeout(async () => {
+        try {
+          await positionsTableRef.current?.refreshPositions();
+          console.log('Positions refreshed after trade');
+        } catch (error) {
+          console.error('Failed to refresh positions:', error);
+        }
+      }, 2000);
     } catch (error) {
       console.error('Trade failed:', error);
 
@@ -129,6 +139,7 @@ function App() {
 
           <section className="positions-section">
             <PositionsTable
+              ref={positionsTableRef}
               onPositionClose={handlePositionClose}
               onAddAlert={addAlert}
             />

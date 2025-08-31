@@ -1,5 +1,11 @@
 // intent: 포지션 테이블 React 컴포넌트 - 백엔드 API 연동
-import React, { useState, useEffect, useCallback } from 'react';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useImperativeHandle,
+  forwardRef,
+} from 'react';
 import { positionsAPI } from '../../utils/api';
 import { healthCheckService } from '../../utils/healthCheck';
 import type { AlertType } from '../Alert';
@@ -15,6 +21,7 @@ interface Position {
 }
 
 interface PositionsTableProps {
+  positions?: Position[];
   onPositionClose?: (symbol: string) => void;
   onAddAlert?: (
     type: AlertType,
@@ -24,12 +31,20 @@ interface PositionsTableProps {
   ) => void;
 }
 
-export const PositionsTable: React.FC<PositionsTableProps> = ({
-  onPositionClose,
-  onAddAlert,
-}) => {
-  const [positions, setPositions] = useState<Position[]>([]);
+export interface PositionsTableRef {
+  refreshPositions: () => Promise<void>;
+}
+
+export const PositionsTable = forwardRef<
+  PositionsTableRef,
+  PositionsTableProps
+>(({ positions: externalPositions, onPositionClose, onAddAlert }, ref) => {
+  const [internalPositions, setInternalPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 외부에서 제공된 positions 또는 내부 positions 사용
+  const positions = externalPositions ?? internalPositions;
+  const setPositions = externalPositions ? () => {} : setInternalPositions;
   const [error, setError] = useState<string | null>(null);
   const [closingPositions, setClosingPositions] = useState<Set<string>>(
     new Set()
@@ -68,6 +83,47 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
     }
   }, [onAddAlert]);
 
+  // refreshPositions 함수 - 외부에서 호출 가능
+  const refreshPositions = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // 백엔드 API에서 포지션 데이터 가져오기
+      const positionsData = await positionsAPI.fetchPositions();
+      setInternalPositions(positionsData);
+
+      console.log('Positions refreshed:', positionsData);
+    } catch (err) {
+      console.error('Failed to refresh positions:', err);
+      const errorMessage = 'Failed to refresh positions. Please try again.';
+      setError(errorMessage);
+
+      // 에러 알람 표시
+      if (onAddAlert) {
+        onAddAlert(
+          'error',
+          '포지션 새로고침 실패',
+          '포지션 데이터를 새로고침하는데 실패했습니다.',
+          5000
+        );
+      }
+
+      setInternalPositions([]); // 에러 시 빈 배열로 설정
+    } finally {
+      setLoading(false);
+    }
+  }, [onAddAlert]);
+
+  // 부모 컴포넌트에 refreshPositions 메소드 노출
+  useImperativeHandle(
+    ref,
+    () => ({
+      refreshPositions,
+    }),
+    [refreshPositions]
+  );
+
   // Retry Health Check 핸들러
   const handleRetryHealthCheck = useCallback(async () => {
     if (isRetryingHealthCheck) return; // 중복 호출 방지
@@ -96,16 +152,18 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
           setIsApiKeyValid(true);
           setHealthCheckError(null);
 
-          // 성공 시 포지션 데이터 다시 로드
-          try {
-            const positionsData = await positionsAPI.fetchPositions();
-            setPositions(positionsData);
-            setError(null);
-          } catch (posError) {
-            console.error(
-              'Failed to load positions after health check:',
-              posError
-            );
+          // 외부에서 positions를 제공받지 않은 경우에만 로드
+          if (!externalPositions) {
+            try {
+              const positionsData = await positionsAPI.fetchPositions();
+              setInternalPositions(positionsData);
+              setError(null);
+            } catch (posError) {
+              console.error(
+                'Failed to load positions after health check:',
+                posError
+              );
+            }
           }
 
           if (onAddAlert) {
@@ -151,10 +209,16 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
     } finally {
       setIsRetryingHealthCheck(false);
     }
-  }, [isRetryingHealthCheck, onAddAlert]);
+  }, [isRetryingHealthCheck, onAddAlert, externalPositions]);
 
   // 실제 포지션 데이터 로드
   useEffect(() => {
+    // 외부에서 positions를 제공받았으면 로딩하지 않음
+    if (externalPositions) {
+      setLoading(false);
+      return;
+    }
+
     const loadPositions = async () => {
       try {
         setLoading(true);
@@ -162,7 +226,7 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
 
         // 백엔드 API에서 포지션 데이터 가져오기
         const positionsData = await positionsAPI.fetchPositions();
-        setPositions(positionsData);
+        setInternalPositions(positionsData);
       } catch (err) {
         console.error('Failed to load positions:', err);
         const errorMessage = 'Failed to load positions. Please try again.';
@@ -178,7 +242,7 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
           );
         }
 
-        setPositions([]); // 에러 시 빈 배열로 설정
+        setInternalPositions([]); // 에러 시 빈 배열로 설정
       } finally {
         setLoading(false);
       }
@@ -203,7 +267,7 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
     }, 30000);
 
     return () => clearInterval(healthInterval);
-  }, [performHealthCheck, onAddAlert]);
+  }, [performHealthCheck, onAddAlert, externalPositions]);
 
   const handleClosePosition = async (symbol: string) => {
     // 이미 청산 중인 경우 중복 요청 방지
@@ -402,4 +466,4 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
       </div>
     </div>
   );
-};
+});
