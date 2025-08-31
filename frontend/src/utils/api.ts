@@ -85,7 +85,7 @@ interface TradeResponse {
   side: string;
   type: string;
   status: string;
-  [key: string]: any; // 다른 필드들도 포함 가능
+  [key: string]: unknown; // 다른 필드들도 포함 가능
 }
 
 // 거래 관련 API 함수들

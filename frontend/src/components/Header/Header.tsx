@@ -1,66 +1,32 @@
 // intent: 헤더 컴포넌트 - 로고, 프로덕트명, 헬스체크 상태 표시
 import { useState, useEffect } from 'react';
 import './Header.css';
-
-interface HealthStatus {
-  status: string;
-  env: {
-    useTestnet: boolean;
-    hasKeys: boolean;
-  };
-  version: string;
-}
-
-interface BinanceHealthStatus {
-  status: string;
-  binance: {
-    reachable: boolean;
-    tsOffsetMs: number;
-    testnet: boolean;
-  };
-}
-
-interface ApiKeyStatus {
-  status: string;
-  message: string;
-  testnet: boolean;
-}
+import { healthCheckService } from '../../utils/healthCheck';
+import type {
+  HealthStatus,
+  BinanceHealthStatus,
+  ApiKeyHealthStatus,
+} from '../../utils/healthCheck';
 
 export const Header = () => {
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [binanceHealthStatus, setBinanceHealthStatus] =
     useState<BinanceHealthStatus | null>(null);
-  const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyStatus | null>(null);
+  const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyHealthStatus | null>(
+    null
+  );
 
   const fetchHealthStatus = async () => {
-    try {
-      // 백엔드 서버 헬스체크
-      const healthResponse = await fetch('http://localhost:3000/healthz');
-      if (healthResponse.ok) {
-        const healthData = await healthResponse.json();
-        setHealthStatus(healthData);
-      }
+    // 분리된 헬스체크 서비스 사용
+    const [health, binanceHealth, apiKeyHealth] = await Promise.all([
+      healthCheckService.getHealthStatus(),
+      healthCheckService.getBinanceHealthStatus(),
+      healthCheckService.getApiKeyHealthStatus(),
+    ]);
 
-      // Binance 연결성 체크
-      const binanceResponse = await fetch(
-        'http://localhost:3000/health/binance'
-      );
-      if (binanceResponse.ok) {
-        const binanceData = await binanceResponse.json();
-        setBinanceHealthStatus(binanceData);
-      }
-
-      // API Key 유효성 체크
-      const apiKeyResponse = await fetch(
-        'http://localhost:3000/health/binance/api-key'
-      );
-      if (apiKeyResponse.ok) {
-        const apiKeyData = await apiKeyResponse.json();
-        setApiKeyStatus(apiKeyData);
-      }
-    } catch {
-      // 에러 처리 - 상태는 그대로 유지
-    }
+    if (health) setHealthStatus(health);
+    if (binanceHealth) setBinanceHealthStatus(binanceHealth);
+    if (apiKeyHealth) setApiKeyStatus(apiKeyHealth);
   };
 
   useEffect(() => {

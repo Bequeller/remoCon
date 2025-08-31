@@ -1,0 +1,219 @@
+/* intent: 알람/토스트 메시지 컴포넌트 스타일 */
+
+/* 알람 컨테이너 - 상단 고정 */
+.alert-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-width: 400px;
+  width: 100%;
+}
+
+/* 개별 알람 */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.3s ease-out;
+  min-height: 60px;
+}
+
+/* 알람 표시 애니메이션 */
+.alert-visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* 알람 종료 애니메이션 */
+.alert-exiting {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+/* 알람 타입별 스타일 */
+.alert-success {
+  background: linear-gradient(
+    135deg,
+    rgba(14, 203, 129, 0.15),
+    rgba(14, 203, 129, 0.05)
+  );
+  border-color: rgba(14, 203, 129, 0.3);
+}
+
+.alert-error {
+  background: linear-gradient(
+    135deg,
+    rgba(246, 70, 93, 0.15),
+    rgba(246, 70, 93, 0.05)
+  );
+  border-color: rgba(246, 70, 93, 0.3);
+}
+
+.alert-warning {
+  background: linear-gradient(
+    135deg,
+    rgba(245, 197, 24, 0.15),
+    rgba(245, 197, 24, 0.05)
+  );
+  border-color: rgba(245, 197, 24, 0.3);
+}
+
+.alert-info {
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.15),
+    rgba(59, 130, 246, 0.05)
+  );
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+/* 알람 아이콘 */
+.alert-icon {
+  font-size: 20px;
+  font-weight: bold;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.alert-success .alert-icon {
+  background: rgba(14, 203, 129, 0.2);
+  color: var(--buy);
+}
+
+.alert-error .alert-icon {
+  background: rgba(246, 70, 93, 0.2);
+  color: var(--sell);
+}
+
+.alert-warning .alert-icon {
+  background: rgba(245, 197, 24, 0.2);
+  color: var(--binance-yellow);
+}
+
+.alert-info .alert-icon {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+/* 알람 내용 */
+.alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-title {
+  font-size: var(--font-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.alert-message {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+/* 닫기 버튼 */
+.alert-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.alert-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+
+/* 프로그레스 바 (선택사항) */
+.alert-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  animation: progress linear;
+}
+
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .alert-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+
+  .alert {
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    min-height: 50px;
+  }
+
+  .alert-icon {
+    font-size: 18px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .alert-title {
+    font-size: var(--font-xs);
+  }
+
+  .alert-message {
+    font-size: 11px;
+  }
+
+  .alert-close {
+    font-size: 18px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .alert {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+}

@@ -1,6 +1,8 @@
 // intent: 포지션 테이블 React 컴포넌트 - 백엔드 API 연동
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { positionsAPI } from '../../utils/api';
+import { healthCheckService } from '../../utils/healthCheck';
+import type { AlertType } from '../Alert';
 import './PositionsTable.css';
 
 interface Position {
@@ -14,10 +16,17 @@ interface Position {
 
 interface PositionsTableProps {
   onPositionClose?: (symbol: string) => void;
+  onAddAlert?: (
+    type: AlertType,
+    title: string,
+    message?: string,
+    duration?: number
+  ) => void;
 }
 
 export const PositionsTable: React.FC<PositionsTableProps> = ({
   onPositionClose,
+  onAddAlert,
 }) => {
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +34,124 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
   const [closingPositions, setClosingPositions] = useState<Set<string>>(
     new Set()
   );
+  const [isApiKeyValid, setIsApiKeyValid] = useState<boolean | null>(null);
+  const [healthCheckError, setHealthCheckError] = useState<string | null>(null);
+  const [isRetryingHealthCheck, setIsRetryingHealthCheck] = useState(false);
+
+  // 헬스체크 수행
+  const performHealthCheck = useCallback(async (): Promise<boolean> => {
+    try {
+      const apiKeyHealth = await healthCheckService.getApiKeyHealthStatus();
+      if (apiKeyHealth) {
+        setIsApiKeyValid(apiKeyHealth.details.is_valid);
+        setHealthCheckError(null);
+        return apiKeyHealth.details.is_valid;
+      }
+      setIsApiKeyValid(false);
+      setHealthCheckError('Unable to check API key status');
+      return false;
+    } catch {
+      setIsApiKeyValid(false);
+      setHealthCheckError('API key validation failed');
+
+      // 헬스체크 실패 알람 표시
+      if (onAddAlert) {
+        onAddAlert(
+          'error',
+          'API 키 검증 실패',
+          'Binance API 키 검증에 실패했습니다. 설정을 확인해주세요.',
+          7000
+        );
+      }
+
+      return false;
+    }
+  }, [onAddAlert]);
+
+  // Retry Health Check 핸들러
+  const handleRetryHealthCheck = useCallback(async () => {
+    if (isRetryingHealthCheck) return; // 중복 호출 방지
+
+    try {
+      setIsRetryingHealthCheck(true);
+
+      // 캐시 클리어 후 직접 API 호출 (캐시 우회를 위해)
+      healthCheckService.clearCache();
+
+      // 직접 fetch 호출로 캐시 우회
+      const response = await fetch(
+        'http://localhost:3000/health/binance/api-key',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const apiKeyHealth = await response.json();
+
+        if (apiKeyHealth && apiKeyHealth.details.is_valid) {
+          setIsApiKeyValid(true);
+          setHealthCheckError(null);
+
+          // 성공 시 포지션 데이터 다시 로드
+          try {
+            const positionsData = await positionsAPI.fetchPositions();
+            setPositions(positionsData);
+            setError(null);
+          } catch (posError) {
+            console.error(
+              'Failed to load positions after health check:',
+              posError
+            );
+          }
+
+          if (onAddAlert) {
+            onAddAlert(
+              'success',
+              '헬스체크 성공',
+              'API 키가 정상적으로 검증되었습니다.',
+              3000
+            );
+          }
+        } else {
+          setIsApiKeyValid(false);
+          setHealthCheckError(
+            apiKeyHealth?.details?.error_message || 'API key validation failed'
+          );
+
+          if (onAddAlert) {
+            onAddAlert(
+              'error',
+              'API 키 검증 실패',
+              apiKeyHealth?.details?.error_message ||
+                'API 키가 유효하지 않습니다.',
+              5000
+            );
+          }
+        }
+      } else {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Retry health check failed:', error);
+      setIsApiKeyValid(false);
+      setHealthCheckError('API key validation failed');
+
+      if (onAddAlert) {
+        onAddAlert(
+          'error',
+          '헬스체크 재시도 실패',
+          '네트워크 오류가 발생했습니다. 연결을 확인해주세요.',
+          5000
+        );
+      }
+    } finally {
+      setIsRetryingHealthCheck(false);
+    }
+  }, [isRetryingHealthCheck, onAddAlert]);
 
   // 실제 포지션 데이터 로드
   useEffect(() => {
@@ -38,21 +165,45 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
         setPositions(positionsData);
       } catch (err) {
         console.error('Failed to load positions:', err);
-        setError('Failed to load positions. Please try again.');
+        const errorMessage = 'Failed to load positions. Please try again.';
+        setError(errorMessage);
+
+        // 에러 알람 표시
+        if (onAddAlert) {
+          onAddAlert(
+            'error',
+            '포지션 로드 실패',
+            '포지션 데이터를 불러오는데 실패했습니다.',
+            5000
+          );
+        }
+
         setPositions([]); // 에러 시 빈 배열로 설정
       } finally {
         setLoading(false);
       }
     };
 
-    // 초기 로드
-    loadPositions();
+    const initializeComponent = async () => {
+      const isHealthy = await performHealthCheck();
+      if (isHealthy) {
+        await loadPositions();
+      }
+    };
 
-    // 60초마다 자동 새로고침 (캐시 TTL과 맞춤)
-    const interval = setInterval(loadPositions, 60000);
+    // 초기 로드 (헬스체크 먼저 수행)
+    initializeComponent();
 
-    return () => clearInterval(interval);
-  }, []);
+    // 헬스체크는 30초마다, 포지션은 API Key 유효할 때만 60초마다
+    const healthInterval = setInterval(async () => {
+      const isHealthy = await performHealthCheck();
+      if (isHealthy) {
+        await loadPositions();
+      }
+    }, 30000);
+
+    return () => clearInterval(healthInterval);
+  }, [performHealthCheck, onAddAlert]);
 
   const handleClosePosition = async (symbol: string) => {
     // 이미 청산 중인 경우 중복 요청 방지
@@ -69,6 +220,16 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
 
       console.log(`Position closed successfully for ${symbol}:`, result);
 
+      // 성공 알람 표시
+      if (onAddAlert) {
+        onAddAlert(
+          'success',
+          '포지션 청산 성공',
+          `${symbol} 포지션이 성공적으로 청산되었습니다.`,
+          5000
+        );
+      }
+
       // 성공 시 포지션 목록에서 제거
       setPositions((prev) => prev.filter((pos) => pos.symbol !== symbol));
 
@@ -80,7 +241,18 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
       console.error(`Failed to close position for ${symbol}:`, error);
 
       // 에러 메시지를 사용자에게 표시
-      setError(`Failed to close position for ${symbol}. Please try again.`);
+      const errorMessage = `Failed to close position for ${symbol}. Please try again.`;
+      setError(errorMessage);
+
+      // 에러 알람 표시
+      if (onAddAlert) {
+        onAddAlert(
+          'error',
+          '포지션 청산 실패',
+          `${symbol} 포지션 청산에 실패했습니다. 다시 시도해주세요.`,
+          7000
+        );
+      }
 
       // 3초 후 에러 메시지 제거
       setTimeout(() => {
@@ -100,6 +272,33 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
     const amount = parseFloat(positionAmt);
     return amount > 0 ? 'long' : 'short';
   };
+
+  // 헬스체크 실패 상태 표시
+  if (isApiKeyValid === false) {
+    return (
+      <div className="positions-section">
+        <div className="card">
+          <div className="panel-header">
+            <span className="tab">Positions</span>
+          </div>
+          <div className="health-check-error">
+            <div className="error-icon">🔑</div>
+            <div className="error-title">API Key Required</div>
+            <div className="error-message">
+              {healthCheckError || 'Please configure valid Binance API key'}
+            </div>
+            <button
+              className="retry-button"
+              onClick={handleRetryHealthCheck}
+              disabled={isRetryingHealthCheck}
+            >
+              {isRetryingHealthCheck ? 'Checking...' : 'Retry Health Check'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // 에러 상태 표시
   if (error) {
