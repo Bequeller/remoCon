@@ -76,3 +76,116 @@
   letter-spacing: 0.3px;
   white-space: nowrap;
 }
+
+/* 사용자 선택기 스타일 */
+.user-selector {
+  position: relative;
+  margin-right: var(--space-sm);
+}
+
+.user-selector-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 2px solid;
+  border-radius: 6px;
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-width: 100px;
+}
+
+.user-selector-button:hover {
+  background: var(--bg-hover);
+  transform: translateY(-1px);
+}
+
+.user-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 4px currentColor;
+  flex-shrink: 0;
+}
+
+.user-label {
+  font-size: var(--font-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  flex: 1;
+  text-align: center;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform var(--transition-fast);
+}
+
+.user-selector-button:hover .dropdown-arrow {
+  color: var(--text-primary);
+}
+
+/* 드랍다운 메뉴 */
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 200px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.user-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.user-option:last-child {
+  border-bottom: none;
+}
+
+.user-option:hover {
+  background: var(--bg-hover);
+}
+
+.user-option.selected {
+  background: var(--bg-selected);
+}
+
+.user-option-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 4px currentColor;
+  flex-shrink: 0;
+}
+
+.user-option-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-option-label {
+  font-size: var(--font-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.user-option-description {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
