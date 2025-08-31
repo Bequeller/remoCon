@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.core.config import get_environment_summary
+from app.core.config import get_binance_config, get_environment_summary
 
 router = APIRouter()
 
@@ -53,6 +53,7 @@ async def validate_api_key():
 
     try:
         status = await get_api_key_status()
+        binance_config = get_binance_config()
 
         return {
             "status": "valid" if status.is_valid else "invalid",
@@ -68,10 +69,11 @@ async def validate_api_key():
                 "last_check": status.last_check.isoformat(),
                 "error_message": status.error_message,
             },
-            "testnet": True,  # config에서 가져오도록 수정 필요
+            "testnet": binance_config["use_testnet"],
         }
 
     except Exception as e:
+        binance_config = get_binance_config()
         return {
             "status": "error",
             "message": f"API key validation failed: {str(e)}",
@@ -82,5 +84,5 @@ async def validate_api_key():
                 "last_check": None,
                 "error_message": str(e),
             },
-            "testnet": True,
+            "testnet": binance_config["use_testnet"],
         }

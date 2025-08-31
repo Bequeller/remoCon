@@ -35,7 +35,7 @@ export const Header = () => {
   const fetchHealthStatus = async () => {
     try {
       // 백엔드 서버 헬스체크
-      const healthResponse = await fetch('http://localhost:3000/health');
+      const healthResponse = await fetch('http://localhost:3000/healthz');
       if (healthResponse.ok) {
         const healthData = await healthResponse.json();
         setHealthStatus(healthData);
