@@ -10,9 +10,12 @@ import type { AlertMessage, AlertType } from './components/Alert';
 import { tradeAPI } from './utils/api';
 import './App.css';
 
+type UserId = 'user1' | 'user2' | 'user3' | 'user4';
+
 function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT');
   const [alerts, setAlerts] = useState<AlertMessage[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserId>('user1');
   const positionsTableRef = useRef<PositionsTableRef>(null);
 
   // 알람 추가 함수
@@ -49,7 +52,7 @@ function App() {
     addAlert('info', '심볼 변경', `${symbol}으로 변경되었습니다.`, 3000);
   };
 
-  const handlePositionClose = (symbol: string) => {
+  const handlePositionClose = async (symbol: string) => {
     console.log('Closing position:', symbol);
     addAlert(
       'warning',
@@ -57,7 +60,45 @@ function App() {
       `${symbol} 포지션 청산을 시도합니다.`,
       3000
     );
-    // 실제 구현에서는 API 호출
+
+    try {
+      // 실제 청산 API 호출
+      const response = await fetch(`http://localhost:3000/api/positions/${symbol}/close?user=${selectedUser}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Position close successful:', result);
+
+      addAlert(
+        'success',
+        '포지션 청산 성공',
+        `${symbol} 포지션이 성공적으로 청산되었습니다.`,
+        5000
+      );
+    } catch (error) {
+      console.error('Position close failed:', error);
+      addAlert(
+        'error',
+        '포지션 청산 실패',
+        `청산 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
+        7000
+      );
+    }
+  };
+
+  const handleUserChange = (userId: UserId) => {
+    setSelectedUser(userId);
+    console.log('Selected user changed to:', userId);
+    addAlert('info', '사용자 변경', `사용자가 ${userId}으로 변경되었습니다.`, 2000);
   };
 
   const handleTrade = async (
@@ -72,6 +113,7 @@ function App() {
         size, // notional -> size
         leverage,
         side, // side.toUpperCase() 제거
+        user: selectedUser, // 현재 선택된 사용자 정보 추가
       };
       const result = await tradeAPI.placeOrder(tradeData); // postTrade -> placeOrder
       console.log('Trade successful:', result);
@@ -111,7 +153,10 @@ function App() {
       {/* 알람 컨테이너 - 상단에 고정 표시 */}
       <AlertContainer alerts={alerts} onClose={removeAlert} />
 
-      <Header />
+      <Header
+        selectedUser={selectedUser}
+        onUserChange={handleUserChange}
+      />
 
       <main className="App-main">
         <div className="container">

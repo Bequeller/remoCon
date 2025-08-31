@@ -49,6 +49,7 @@ class PositionService:
                     "order_type",
                     "trade_result",
                     "error_message",
+                    "user",
                 ]
                 writer = csv.DictWriter(file, fieldnames=fieldnames)
 
@@ -75,6 +76,9 @@ class PositionService:
                     "order_type": trade_data.get("order_type", ""),
                     "trade_result": trade_data.get("trade_result", ""),
                     "error_message": trade_data.get("error_message", ""),
+                    "user": trade_data.get(
+                        "user", ""
+                    ),  # 청산 시에는 user 정보가 없을 수 있음
                 }
 
                 writer.writerow(row)
@@ -142,7 +146,9 @@ class PositionService:
 
         return results
 
-    async def close_position(self, symbol: str) -> dict[str, Any]:
+    async def close_position(
+        self, symbol: str, user: str = "unknown"
+    ) -> dict[str, Any]:
         """
         특정 심볼의 포지션을 청산합니다.
 
@@ -167,6 +173,7 @@ class PositionService:
             "order_id": "",
             "status": "ATTEMPTING",
             "order_type": "CLOSE_POSITION",
+            "user": user,  # 사용자 정보 추가
         }
         self._save_trade_to_csv(attempt_close_data)
 
@@ -185,6 +192,7 @@ class PositionService:
                 "order_id": "",
                 "status": "FAILED",
                 "order_type": "CLOSE_POSITION",
+                "user": user,  # 사용자 정보 추가
             }
             self._save_trade_to_csv(failed_close_data)
             raise ValueError(f"No active position found for {symbol}")
@@ -204,6 +212,7 @@ class PositionService:
                 "order_id": "",
                 "status": "FAILED",
                 "order_type": "CLOSE_POSITION",
+                "user": user,  # 사용자 정보 추가
             }
             self._save_trade_to_csv(failed_close_data)
             raise ValueError(f"No position amount for {symbol}")
@@ -224,6 +233,7 @@ class PositionService:
 
             # 청산 성공 상태를 CSV에 기록
             success_close_data = {
+                **result,  # 바이낸스 API 응답 데이터 포함 (먼저 추가해서 덮어쓰기 방지)
                 "symbol": symbol,
                 "side": side,
                 "quantity": quantity,
@@ -231,7 +241,7 @@ class PositionService:
                 "trade_result": "COMPLETED",  # 청산 성공 상태
                 "error_message": "",
                 "order_type": "CLOSE_POSITION",
-                **result,  # 바이낸스 API 응답 데이터 포함
+                "user": user,  # 사용자 정보 추가 (마지막에 추가해서 덮어쓰기 방지)
             }
             self._save_trade_to_csv(success_close_data)
 
@@ -254,6 +264,7 @@ class PositionService:
                 "order_id": "",
                 "status": "FAILED",
                 "order_type": "CLOSE_POSITION",
+                "user": user,  # 사용자 정보 추가
             }
             self._save_trade_to_csv(failed_close_data)
 

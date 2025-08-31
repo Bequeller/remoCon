@@ -42,6 +42,7 @@ class TradeService:
                     "order_type",
                     "trade_result",
                     "error_message",
+                    "user",
                 ]
                 writer = csv.DictWriter(file, fieldnames=fieldnames)
 
@@ -68,6 +69,7 @@ class TradeService:
                     "order_type": trade_data.get("type", ""),
                     "trade_result": trade_data.get("trade_result", ""),
                     "error_message": trade_data.get("error_message", ""),
+                    "user": trade_data.get("user", ""),
                 }
 
                 writer.writerow(row)
@@ -105,6 +107,7 @@ class TradeService:
                 "order_id": "",
                 "status": "ATTEMPTING",
                 "order_type": "MARKET",
+                "user": order_data.user,  # 사용자 정보 추가
             }
             self._save_trade_to_csv(attempt_trade_data)
 
@@ -179,13 +182,14 @@ class TradeService:
 
             # 7. Save trade data to CSV
             trade_csv_data = {
+                **order_result,  # 바이낸스 API 응답 데이터 포함 (먼저 추가해서 덮어쓰기 방지)
                 "symbol": order_data.symbol,
                 "side": order_data.side.value.upper(),
                 "quantity": formatted_quantity,
                 "leverage": order_data.leverage,
                 "trade_result": "COMPLETED",  # 거래 성공 상태
                 "error_message": "",
-                **order_result,  # 바이낸스 API 응답 데이터 포함
+                "user": order_data.user,  # 사용자 정보 추가 (마지막에 추가해서 덮어쓰기 방지)
             }
             self._save_trade_to_csv(trade_csv_data)
 
@@ -206,6 +210,7 @@ class TradeService:
                     "order_id": "",
                     "status": "FAILED",
                     "order_type": "MARKET",
+                    "user": order_data.user,  # 사용자 정보 추가
                 }
                 self._save_trade_to_csv(failed_trade_data)
             except Exception as csv_error:

@@ -15,6 +15,7 @@ async def access_log_middleware(request: Request, call_next: Callable):
     req_id = str(uuid.uuid4())
     request.state.request_id = req_id
     start = time.perf_counter()
+
     try:
         response = await call_next(request)
     except HTTPException:
@@ -35,9 +36,13 @@ async def access_log_middleware(request: Request, call_next: Callable):
             },
         )
     elapsed = int((time.perf_counter() - start) * 1000)
-    # 에러 요청만 로깅 (성공적인 요청은 로그 제거)
+    # 모든 요청 로깅 (디버깅용)
     if response.status_code >= 400:
         logger.error(
+            f"reqId={req_id} route={request.url.path} status={response.status_code} latencyMs={elapsed}"
+        )
+    else:
+        logger.info(
             f"reqId={req_id} route={request.url.path} status={response.status_code} latencyMs={elapsed}"
         )
     return response

@@ -8,7 +8,7 @@ def setup_logger() -> logging.Logger:
     logger = logging.getLogger("app")
     if logger.handlers:
         return logger
-    logger.setLevel(logging.WARNING)  # INFO에서 WARNING으로 변경
+    logger.setLevel(logging.WARNING)  # WARNING 레벨로 유지
     handler = logging.StreamHandler(stream=sys.stdout)
     formatter = logging.Formatter(
         fmt="ts=%(asctime)s level=%(levelname)s msg=%(message)s",

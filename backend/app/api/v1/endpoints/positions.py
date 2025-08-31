@@ -15,7 +15,7 @@ router = APIRouter()
     summary="Close a specific position",
     description="Close a position for the specified symbol using market order",
 )
-async def close_position(request: Request, symbol: str):
+async def close_position(request: Request, symbol: str, user: str = "unknown"):
     """
     특정 심볼의 포지션을 청산합니다.
 
@@ -27,7 +27,7 @@ async def close_position(request: Request, symbol: str):
         청산 결과 또는 에러 응답
     """
     try:
-        result = await position_service.close_position(symbol=symbol)
+        result = await position_service.close_position(symbol=symbol, user=user)
         return {
             "status": "success",
             "message": f"Position closed successfully for {symbol}",

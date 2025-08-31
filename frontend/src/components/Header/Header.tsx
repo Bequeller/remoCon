@@ -17,14 +17,21 @@ interface UserOption {
   color: string;
 }
 
-export const Header = () => {
+interface HeaderProps {
+  selectedUser?: UserId;
+  onUserChange?: (userId: UserId) => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({
+  selectedUser = 'user1',
+  onUserChange,
+}) => {
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [binanceHealthStatus, setBinanceHealthStatus] =
     useState<BinanceHealthStatus | null>(null);
   const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyHealthStatus | null>(
     null
   );
-  const [selectedUser, setSelectedUser] = useState<UserId>('user1');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // 사용자 옵션들
@@ -104,7 +111,7 @@ export const Header = () => {
   };
 
   const handleUserChange = (userId: UserId) => {
-    setSelectedUser(userId);
+    onUserChange?.(userId);
     setIsDropdownOpen(false);
     console.log(`사용자 변경: ${userId}`);
   };

@@ -20,6 +20,7 @@ class TradeRequest(BaseModel):
     side: OrderSide = Field(..., description="Order side: 'buy' or 'sell'")
     size: float = Field(..., gt=0, description="Order size in USDT")
     leverage: int = Field(..., ge=1, le=100, description="Leverage")
+    user: str = Field(..., description="Current user identifier")
 
 
 class TradeResponse(BaseModel):
