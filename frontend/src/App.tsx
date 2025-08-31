@@ -31,6 +31,11 @@ function App() {
     []
   );
 
+  // MarketOrder용 알람 추가 함수
+  const addAlertForMarketOrder = useCallback((alert: AlertMessage) => {
+    setAlerts((prev) => [...prev, alert]);
+  }, []);
+
   // 알람 제거 함수
   const removeAlert = useCallback((id: string) => {
     setAlerts((prev) => prev.filter((alert) => alert.id !== id));
@@ -115,7 +120,11 @@ function App() {
           </section>
 
           <section className="market-order-section">
-            <MarketOrder symbol={selectedSymbol} onTrade={handleTrade} />
+            <MarketOrder
+              symbol={selectedSymbol}
+              onTrade={handleTrade}
+              onAlert={addAlertForMarketOrder}
+            />
           </section>
 
           <section className="positions-section">

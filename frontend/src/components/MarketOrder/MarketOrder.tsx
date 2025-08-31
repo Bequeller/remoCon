@@ -1,6 +1,8 @@
 // intent: Market Order React 컴포넌트 - Size를 USDT 단위로 변경
 import React, { useState } from 'react';
 import './MarketOrder.css';
+import { healthCheckService } from '../../utils/healthCheck';
+import type { AlertMessage } from '../Alert/Alert';
 
 interface MarketOrderProps {
   symbol: string;
@@ -10,14 +12,90 @@ interface MarketOrderProps {
     size: number,
     leverage: number
   ) => void;
+  onAlert?: (alert: AlertMessage) => void;
 }
 
 export const MarketOrder: React.FC<MarketOrderProps> = ({
   symbol,
   onTrade,
+  onAlert,
 }) => {
   const [size, setSize] = useState(100);
   const [leverage, setLeverage] = useState(10);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+
+  // 헬스체크 수행 및 검증
+  const performHealthChecks = async (): Promise<boolean> => {
+    try {
+      setIsCheckingHealth(true);
+
+      // 각 헬스체크를 독립적으로 수행
+      const healthStatus = await healthCheckService.getHealthStatus();
+      const binanceHealthStatus =
+        await healthCheckService.getBinanceHealthStatus();
+      const apiKeyHealthStatus =
+        await healthCheckService.getApiKeyHealthStatus();
+
+      // 각 헬스체크 결과 검증
+      const healthErrors: string[] = [];
+
+      // 1. 백엔드 헬스체크
+      if (!healthStatus || healthStatus.status !== 'ok') {
+        healthErrors.push('백엔드 서버 상태가 비정상입니다');
+      }
+
+      // 2. 바이낸스 연결 상태
+      if (
+        !binanceHealthStatus ||
+        binanceHealthStatus.status !== 'ok' ||
+        !binanceHealthStatus.binance.reachable
+      ) {
+        healthErrors.push('바이낸스 서버 연결이 불가능합니다');
+      }
+
+      // 3. API 키 상태
+      if (
+        !apiKeyHealthStatus ||
+        apiKeyHealthStatus.status !== 'valid' ||
+        !apiKeyHealthStatus.details.is_valid
+      ) {
+        healthErrors.push('API 키가 유효하지 않거나 권한이 부족합니다');
+      }
+
+      if (healthErrors.length > 0) {
+        // 헬스체크 실패 시 알림 표시
+        const alertId = `health-check-error-${Date.now()}`;
+        onAlert?.({
+          id: alertId,
+          type: 'error',
+          title: '거래 불가',
+          message: `다음 문제가 발견되었습니다:\n• ${healthErrors.join(
+            '\n• '
+          )}`,
+          duration: 8000,
+        });
+        console.log('헬스체크 실패:', healthErrors);
+        return false;
+      }
+
+      console.log('헬스체크 성공: 모든 시스템이 정상 작동 중');
+      return true;
+    } catch (error) {
+      console.error('헬스체크 중 오류 발생:', error);
+      const alertId = `health-check-error-${Date.now()}`;
+      onAlert?.({
+        id: alertId,
+        type: 'error',
+        title: '헬스체크 실패',
+        message:
+          '시스템 상태 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        duration: 5000,
+      });
+      return false;
+    } finally {
+      setIsCheckingHealth(false);
+    }
+  };
 
   const handleSizeChange = (value: number) => {
     setSize(value);
@@ -46,7 +124,21 @@ export const MarketOrder: React.FC<MarketOrderProps> = ({
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
-  const handleTrade = (side: 'buy' | 'sell') => {
+  const handleTrade = async (side: 'buy' | 'sell') => {
+    // 헬스체크 진행 중이면 중복 실행 방지
+    if (isCheckingHealth) {
+      return;
+    }
+
+    // 헬스체크 수행
+    const isHealthy = await performHealthChecks();
+
+    if (!isHealthy) {
+      // 헬스체크 실패 - 이미 performHealthChecks에서 알림 표시됨
+      return;
+    }
+
+    // 헬스체크 성공 시 거래 실행
     onTrade?.(symbol, side, size, leverage);
     console.log(`${side.toUpperCase()} order:`, { symbol, size, leverage });
   };
@@ -132,17 +224,19 @@ export const MarketOrder: React.FC<MarketOrderProps> = ({
             className="btn buy"
             type="button"
             onClick={() => handleTrade('buy')}
+            disabled={isCheckingHealth}
             aria-label="Buy order"
           >
-            Buy/Long
+            {isCheckingHealth ? '체크 중...' : 'Buy/Long'}
           </button>
           <button
             className="btn sell"
             type="button"
             onClick={() => handleTrade('sell')}
+            disabled={isCheckingHealth}
             aria-label="Sell order"
           >
-            Sell/Short
+            {isCheckingHealth ? '체크 중...' : 'Sell/Short'}
           </button>
         </div>
       </div>
